@@ -145,7 +145,7 @@ This document summarizes the execution model of every benchmark configuration.
 
 ---
 
-# if I had to pick only 12 configurations
+# If only choosing 12 configurations
 
 ```bash
 bench-stdlib-httpserver (python http parser) # single thread
