@@ -15,9 +15,7 @@ Environment variables:
 - `WORKERS` (used by Gunicorn/Granian examples, default `1`)
 - `THREADS` (used by Gunicorn gthread example, default `8`)
 
-Passenger WSGI:
-
-Change the default passenger_wsgi.py contents to
+Change the default passenger_wsgi.py contents to:
 
 ```python
 from app import app as application
