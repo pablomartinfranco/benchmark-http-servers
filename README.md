@@ -167,7 +167,9 @@ bench-asgi-fastapi-uvicorn-uvloop
 
 ---
 
-Examples: **"respond to HTTP requests using CPython 3.11"**, the simplest possible servers built into the standard library.
+# Standard library examples
+
+The simplest possible servers built into the standard library.
 
 ```python
 from http.server import BaseHTTPRequestHandler, HTTPServer
