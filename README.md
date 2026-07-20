@@ -19,7 +19,7 @@ Environment variables:
 
 This document summarizes the execution model of every benchmark configuration.
 
-| Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
+| Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Non-blocking I/O | Best For | Notes |
 |-----------|----------|-------------|-------------------|------------|--------------|----------|------|
 | **bench-tier1-stdlib-httpserver** | stdlib | Python | Single-thread | Sequential | Blocking | CPU-bound (single client), testing | Processes one request at a time. Simplest possible HTTP server. |
 | **bench-tier1-stdlib-threadinghttpserver** | stdlib | Python | Thread per request | OS kernel threads | Blocking | Mixed, low/moderate concurrency | Every connection gets its own OS thread. Simple but expensive at high concurrency. |
