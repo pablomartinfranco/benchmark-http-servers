@@ -345,6 +345,451 @@ This is fully asynchronous and uses only the Python 3.11 standard library.
 * **No dependencies and true async:** `asyncio.start_server()` with your own minimal HTTP parsing.
 
 
+# Best ASGI Architecture
 
+A modern, high-performance production backend should follow an asynchronous, non-blocking architecture.
 
+```text
+                Internet
+                    │
+            Nginx / Caddy
+                    │
+              HTTP/2 + TLS
+                    │
+         Granian (Preferred)
+          or Uvicorn + uvloop
+                    │
+            Starlette / FastAPI
+                    │
+        Async Middleware Pipeline
+                    │
+        Async Business Logic Layer
+         │            │            │
+         ▼            ▼            ▼
+      Redis       PostgreSQL       S3
+  (redis.asyncio)  (asyncpg)   (aioboto3)
+                    │
+             Background Queue
+      (Arq / Dramatiq / Celery / Kafka)
+                    │
+             CPU-heavy Workers
+    (Rust / PyO3 / multiprocessing)
+```
 
+---
+
+# ASGI Servers
+
+## Granian (Recommended)
+
+Lowest Python networking overhead with a Rust-based runtime.
+
+```text
+Granian
+├── Rust networking
+├── Rust HTTP parser
+├── Native worker threads
+├── ASGI
+└── HTTP/1 + HTTP/2
+```
+
+### Advantages
+
+- Rust networking stack
+- Rust HTTP parser (Hyper)
+- Native worker threads
+- Excellent multicore scalability
+- Very low latency
+- ASGI compatible
+- Supports FastAPI, Starlette, Litestar, and bare ASGI applications
+
+---
+
+## Uvicorn + uvloop
+
+The industry-standard ASGI deployment.
+
+```text
+Uvicorn
+├── uvloop
+├── httptools
+└── websockets
+```
+
+### Production startup
+
+```bash
+uvicorn app:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --loop uvloop \
+    --http httptools \
+    --workers 8
+```
+
+---
+
+# Database
+
+Always use asynchronous database drivers.
+
+## Recommended
+
+```python
+asyncpg
+```
+
+## Avoid
+
+```python
+psycopg2
+```
+
+Unless isolated behind a thread pool or worker process.
+
+---
+
+# Redis
+
+Use the asyncio implementation.
+
+## Recommended
+
+```python
+redis.asyncio
+```
+
+Avoid synchronous Redis clients inside async request handlers.
+
+---
+
+# HTTP Client
+
+## Recommended
+
+```python
+httpx.AsyncClient
+```
+
+Instead of
+
+```python
+requests
+```
+
+---
+
+# File I/O
+
+Avoid blocking file operations.
+
+Instead of
+
+```python
+with open(...) as f:
+    ...
+```
+
+Use
+
+```python
+aiofiles
+```
+
+when handling many concurrent file operations.
+
+---
+
+# CPU-bound Work
+
+Never perform CPU-intensive work inside the event loop.
+
+Avoid doing:
+
+- Image processing
+- Compression
+- AI inference
+- Video encoding
+- Large cryptographic operations
+
+Instead use one of:
+
+- `ProcessPoolExecutor`
+- Rust extensions
+- PyO3
+- Ray
+- Separate worker processes
+
+---
+
+# JSON Serialization
+
+Instead of
+
+```python
+json.dumps(...)
+```
+
+Use
+
+```python
+orjson.dumps(...)
+```
+
+Benefits:
+
+- 2–5× faster serialization
+- Lower CPU usage
+- Lower latency
+
+---
+
+# Validation
+
+Use
+
+```python
+Pydantic v2
+```
+
+Benefits:
+
+- Rust-powered validation (`pydantic-core`)
+- Faster parsing
+- Lower memory usage
+
+---
+
+# Compression
+
+Prefer
+
+```text
+zstd
+```
+
+over
+
+```text
+gzip
+```
+
+Benefits:
+
+- Better compression ratio
+- Faster decompression
+- Excellent production performance
+
+---
+
+# Background Jobs
+
+Never block request handlers.
+
+Use a background task queue.
+
+Recommended options:
+
+- Arq
+- Dramatiq
+- Celery
+- Kafka (stream processing)
+
+Typical architecture:
+
+```text
+HTTP Request
+      │
+      ▼
+ FastAPI Handler
+      │
+      ├──────────────► Immediate Response
+      │
+      ▼
+ Background Queue
+      │
+      ▼
+ Worker Processes
+      │
+      ▼
+ CPU-intensive Tasks
+```
+
+---
+
+# Recommended Technology Stack
+
+| Component | Recommendation |
+|-----------|----------------|
+| Reverse Proxy | Nginx or Caddy |
+| ASGI Server | Granian (preferred) or Uvicorn |
+| Event Loop | uvloop |
+| HTTP Parser | httptools |
+| Framework | Starlette or FastAPI |
+| JSON | orjson |
+| Validation | Pydantic v2 |
+| Database Driver | asyncpg |
+| ORM | SQLAlchemy Async |
+| Redis | redis.asyncio |
+| HTTP Client | httpx.AsyncClient |
+| File I/O | aiofiles |
+| Background Queue | Arq / Dramatiq / Celery |
+| CPU-intensive Work | Rust / PyO3 / ProcessPoolExecutor |
+| Compression | zstd |
+
+---
+
+# Performance Checklist
+
+- ✅ ASGI instead of WSGI
+- ✅ `uvloop`
+- ✅ `httptools`
+- ✅ `asyncpg`
+- ✅ `redis.asyncio`
+- ✅ `httpx.AsyncClient`
+- ✅ `aiofiles`
+- ✅ `orjson`
+- ✅ `Pydantic v2`
+- ✅ `zstd`
+- ✅ Background task queue
+- ✅ Offload CPU-heavy work to workers or native extensions
+- ✅ Avoid blocking operations inside the event loop
+
+---
+
+# Middleware
+
+Keep the middleware pipeline as small as possible to reduce per-request overhead.
+
+```text
+Request
+   │
+   ▼
+Logging
+   │
+   ▼
+Compression
+   │
+   ▼
+Authentication
+   │
+   ▼
+Routing
+   │
+   ▼
+Handler
+```
+
+> **Recommendation:** Avoid long middleware chains. Every middleware introduces additional latency and CPU overhead.
+
+---
+
+# Example Production Stack
+
+A balanced, high-performance production deployment.
+
+```text
+Linux
+   │
+   ▼
+Caddy
+   │
+   ▼
+Granian
+   │
+   ▼
+Starlette
+   │
+   ▼
+uvloop
+   │
+   ▼
+orjson
+   │
+   ▼
+asyncpg
+   │
+   ▼
+redis.asyncio
+   │
+   ▼
+SQLAlchemy Async
+   │
+   ▼
+Rust Extensions (PyO3)
+   │
+   ▼
+PostgreSQL
+   │
+   ▼
+Redis
+```
+
+### Components
+
+| Layer | Technology |
+|--------|------------|
+| Operating System | Linux |
+| Reverse Proxy | Caddy |
+| ASGI Server | Granian |
+| Framework | Starlette |
+| Event Loop | uvloop |
+| JSON Serialization | orjson |
+| Database Driver | asyncpg |
+| Cache | redis.asyncio |
+| ORM | SQLAlchemy Async |
+| Native Extensions | Rust / PyO3 |
+| Database | PostgreSQL |
+| Cache Storage | Redis |
+
+---
+
+# Example FastAPI Production Stack
+
+If you're building with **FastAPI**, a high-performance stack looks like this:
+
+```text
+Granian
+   │
+   ▼
+FastAPI
+   │
+   ▼
+uvloop
+   │
+   ▼
+httptools
+   │
+   ▼
+orjson
+   │
+   ▼
+Pydantic v2
+   │
+   ▼
+asyncpg
+   │
+   ▼
+redis.asyncio
+   │
+   ▼
+Background Queue
+   │
+   ▼
+Rust Extensions (PyO3)
+```
+
+### Components
+
+| Layer | Technology |
+|--------|------------|
+| ASGI Server | Granian |
+| Framework | FastAPI |
+| Event Loop | uvloop |
+| HTTP Parser | httptools |
+| JSON Serialization | orjson |
+| Validation | Pydantic v2 |
+| Database Driver | asyncpg |
+| Redis Client | redis.asyncio |
+| Background Jobs | Arq / Dramatiq / Celery |
+| Native Performance | Rust / PyO3 |
