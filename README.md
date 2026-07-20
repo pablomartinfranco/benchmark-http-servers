@@ -32,10 +32,10 @@ This document summarizes the execution model of every benchmark configuration.
 
 | Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
 |-----------|----------|-------------|-------------------|------------|--------------|----------|------|
-| **bench-tier2-wsgi-waitress** | Waitress | Python | Thread pool | OS kernel threads | Blocking | Mixed workloads | Production WSGI server. Cross-platform (Windows friendly). |
-| **bench-tier2-wsgi-gunicorn-sync** | Gunicorn | Python | Multiple worker processes | OS process scheduler | Blocking | CPU-bound | Classic prefork model. One request per worker process. Linux standard deployment. |
-| **bench-tier2-wsgi-gunicorn-gthread** | Gunicorn | Python | Processes + thread pools | OS scheduler | Blocking | Mixed workloads | Multiple processes each serving requests using worker threads. |
-| **bench-tier2-wsgi-gunicorn-gevent** | Gunicorn + gevent | Python | Processes + greenlets | Cooperative (greenlet scheduler) | Non-blocking* | I/O-bound | Monkey-patches blocking sockets into cooperative operations. Excellent for many idle connections. |
+| **bench-tier2-wsgi-waitress** | Waitress | Python | Thread pool | OS kernel threads | ❌ Blocking | Mixed workloads | Production WSGI server. Cross-platform (Windows friendly). |
+| **bench-tier2-wsgi-gunicorn-sync** | Gunicorn | Python | Multiple worker processes | OS process scheduler | ❌ Blocking | CPU-bound | Classic prefork model. One request per worker process. Linux standard deployment. |
+| **bench-tier2-wsgi-gunicorn-gthread** | Gunicorn | Python | Processes + thread pools | OS scheduler | ❌ Blocking | Mixed workloads | Multiple processes each serving requests using worker threads. |
+| **bench-tier2-wsgi-gunicorn-gevent** | Gunicorn + gevent | Python | Processes + greenlets | Cooperative (greenlet scheduler) | ✅ Non-blocking* | I/O-bound | Monkey-patches blocking sockets into cooperative operations. Excellent for many idle connections. |
 
 > *Uses cooperative non-blocking networking via gevent monkey patching.
 
