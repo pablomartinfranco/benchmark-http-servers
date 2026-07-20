@@ -2,33 +2,6 @@
 
 Single-file HTTP benchmark servers grouped by benchmark name.
 
-## Files
-
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier1_stdlib_httpserver.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier1_stdlib_threadinghttpserver.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier1_stdlib_asyncio_default.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier1_stdlib_asyncio_uvloop.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier2_wsgi_waitress.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier2_wsgi_gunicorn_sync.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier2_wsgi_gunicorn_gthread.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier2_wsgi_gunicorn_gevent.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier3_aiohttp_with_aiohttp_parser.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier3_sanic_with_httptools_parser.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier3_blacksheep_with_httptools_parser.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier3_falcon_asgi_with_httptools_parser.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier4_asgi_uvicorn_default.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier4_asgi_uvicorn_uvloop.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier4_asgi_hypercorn.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier4_asgi_daphne.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier5_asgi_bare_app.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier5_asgi_starlette.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier5_asgi_fastapi.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier5_asgi_litestar.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier5_asgi_quart.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier6_granian_default.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier6_granian_fastapi.py`
-- `/home/runner/work/benchmark-http-servers/benchmark-http-servers/benchmarks/bench_tier6_granian_bare_asgi.py`
-
 ## Run
 
 ```bash
@@ -41,3 +14,131 @@ Environment variables:
 - `PORT` (default `8000`)
 - `WORKERS` (used by Gunicorn/Granian examples, default `1`)
 - `THREADS` (used by Gunicorn gthread example, default `8`)
+
+# Benchmark Configuration Cheat Sheet
+
+This document summarizes the execution model of every benchmark configuration.
+
+| Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
+|-----------|----------|-------------|-------------------|------------|--------------|----------|------|
+| **bench-tier1-stdlib-httpserver** | stdlib | Python | Single-thread | Sequential | ✅ Blocking | CPU-bound (single client), testing | Processes one request at a time. Simplest possible HTTP server. |
+| **bench-tier1-stdlib-threadinghttpserver** | stdlib | Python | Thread per request | OS kernel threads | ✅ Blocking | Mixed, low/moderate concurrency | Every connection gets its own OS thread. Simple but expensive at high concurrency. |
+| **bench-tier1-stdlib-asyncio-default** | asyncio | Manual | Async coroutines | asyncio event loop | ❌ Non-blocking | I/O-bound | Single-thread cooperative multitasking using `async/await`. |
+| **bench-tier1-stdlib-asyncio-uvloop** | asyncio + uvloop | Manual | Async coroutines | libuv event loop | ❌ Non-blocking | I/O-bound | Same architecture as above but replaces asyncio scheduler with libuv for lower overhead. |
+
+---
+
+## Tier 2 — WSGI Servers
+
+| Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
+|-----------|----------|-------------|-------------------|------------|--------------|----------|------|
+| **bench-tier2-wsgi-waitress** | Waitress | Python | Thread pool | OS kernel threads | ✅ Blocking | Mixed workloads | Production WSGI server. Cross-platform (Windows friendly). |
+| **bench-tier2-wsgi-gunicorn-sync** | Gunicorn | Python | Multiple worker processes | OS process scheduler | ✅ Blocking | CPU-bound | Classic prefork model. One request per worker process. Linux standard deployment. |
+| **bench-tier2-wsgi-gunicorn-gthread** | Gunicorn | Python | Processes + thread pools | OS scheduler | ✅ Blocking | Mixed workloads | Multiple processes each serving requests using worker threads. |
+| **bench-tier2-wsgi-gunicorn-gevent** | Gunicorn + gevent | Python | Processes + greenlets | Cooperative (greenlet scheduler) | ❌ Non-blocking* | I/O-bound | Monkey-patches blocking sockets into cooperative operations. Excellent for many idle connections. |
+
+> *Uses cooperative non-blocking networking via gevent monkey patching.
+
+---
+
+## Tier 3 — Async Frameworks
+
+| Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
+|-----------|----------|-------------|-------------------|------------|--------------|----------|------|
+| **bench-tier3-aiohttp-with-aiohttp-parser** | aiohttp | aiohttp C parser | Async coroutines | asyncio / uvloop | ❌ Non-blocking | I/O-bound | Mature asyncio-native HTTP framework. |
+| **bench-tier3-sanic-with-httptools-parser** | Sanic | httptools (llhttp) | Async coroutines | asyncio / uvloop | ❌ Non-blocking | I/O-bound | Optimized for low latency and high throughput. |
+| **bench-tier3-blacksheep-with-httptools-parser** | BlackSheep | httptools | Async coroutines | asyncio / uvloop | ❌ Non-blocking | I/O-bound | Minimal overhead ASGI framework. |
+| **bench-tier3-falcon-asgi-with-httptools-parser** | Falcon ASGI | httptools | Async coroutines | asyncio / uvloop | ❌ Non-blocking | I/O-bound | Lightweight ASGI implementation focused on performance. |
+
+---
+
+## Tier 4 — ASGI Servers
+
+| Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
+|-----------|----------|-------------|-------------------|------------|--------------|----------|------|
+| **bench-tier4-asgi-uvicorn-default** | Uvicorn | httptools | Async coroutines | asyncio | ❌ Non-blocking | I/O-bound | Most common ASGI deployment. |
+| **bench-tier4-asgi-uvicorn-uvloop** | Uvicorn | httptools | Async coroutines | uvloop (libuv) | ❌ Non-blocking | I/O-bound | Faster scheduler with lower event-loop overhead. |
+| **bench-tier4-asgi-hypercorn** | Hypercorn | h11 / httptools | Async coroutines | asyncio / Trio / uvloop | ❌ Non-blocking | I/O-bound | Supports multiple async runtimes including Trio. |
+| **bench-tier4-asgi-daphne** | Daphne | Twisted HTTP | Async callbacks | Twisted Reactor | ❌ Non-blocking | I/O-bound | Reference ASGI server used by Django Channels. |
+
+---
+
+## Tier 5 — ASGI Applications
+
+(Assumes Uvicorn + uvloop)
+
+| Benchmark | Framework | Protocol | Scheduling | Blocking I/O | Best For | Notes |
+|-----------|-----------|----------|------------|--------------|----------|------|
+| **bench-tier5-asgi-bare-app** | Bare ASGI | ASGI | Event loop | ❌ Non-blocking | I/O-bound | Measures raw ASGI overhead. |
+| **bench-tier5-asgi-starlette** | Starlette | ASGI | Event loop | ❌ Non-blocking | I/O-bound | Lightweight ASGI toolkit. |
+| **bench-tier5-asgi-fastapi** | FastAPI | ASGI | Event loop | ❌ Non-blocking | I/O-bound | Adds dependency injection and Pydantic validation. |
+| **bench-tier5-asgi-litestar** | Litestar | ASGI | Event loop | ❌ Non-blocking | I/O-bound | Performance-oriented ASGI framework. |
+| **bench-tier5-asgi-quart** | Quart | ASGI | Event loop | ❌ Non-blocking | I/O-bound | Async-compatible Flask implementation. |
+
+---
+
+## Tier 6 — Granian
+
+| Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
+|-----------|----------|-------------|-------------------|------------|--------------|----------|------|
+| **bench-tier6-granian-default** | Granian | Rust (hyper) | Native worker threads | Rust runtime | ❌ Non-blocking | I/O-bound | Networking handled entirely in Rust before entering Python. |
+| **bench-tier6-granian-fastapi** | Granian + FastAPI | Rust | Native worker threads | Rust runtime | ❌ Non-blocking | I/O-bound | FastAPI application running behind Rust HTTP stack. |
+| **bench-tier6-granian-bare-asgi** | Granian + Bare ASGI | Rust | Native worker threads | Rust runtime | ❌ Non-blocking | I/O-bound | Lowest-overhead Granian benchmark. |
+
+---
+
+# Concurrency Models
+
+| Model | Description |
+|--------|-------------|
+| **Sequential** | One request processed at a time. |
+| **Thread per request** | Every connection owns one kernel thread. |
+| **Thread pool** | Fixed number of worker threads process requests. |
+| **Multi-process** | Multiple independent Python worker processes. |
+| **Process + thread pool** | Worker processes containing thread pools. |
+| **Greenlets** | User-space coroutines scheduled cooperatively by gevent. |
+| **Async coroutines** | `async/await` tasks running on an event loop. |
+| **Native Rust workers** | Networking and scheduling implemented in Rust. |
+
+---
+
+# Scheduling Techniques
+
+| Scheduler | Description |
+|-----------|-------------|
+| **Sequential** | No scheduler; one request runs until completion. |
+| **Kernel threads** | Operating system schedules threads across CPU cores. |
+| **Kernel processes** | Operating system schedules independent worker processes. |
+| **asyncio Event Loop** | Cooperative scheduler driven by `await`. |
+| **uvloop (libuv)** | High-performance replacement for asyncio's default event loop. |
+| **Greenlet Scheduler** | gevent switches greenlets during patched blocking operations. |
+| **Twisted Reactor** | Callback/event-driven scheduler used by Twisted. |
+| **Rust Runtime** | Native scheduler implemented in Rust (Granian). |
+
+---
+
+# HTTP Parsers
+
+| Parser | Language | Used By |
+|---------|----------|----------|
+| stdlib parser | Python | HTTPServer, ThreadingHTTPServer |
+| Manual parser | Python | Custom asyncio benchmarks |
+| aiohttp parser | C | aiohttp |
+| httptools (llhttp) | C | Uvicorn, Sanic, BlackSheep, Falcon |
+| h11 | Python | Hypercorn (optional) |
+| Twisted HTTP | Python | Daphne |
+| hyper | Rust | Granian |
+
+---
+
+# Choosing the Right Model
+
+| Workload | Recommended Model |
+|----------|-------------------|
+| CPU-bound | Multi-process (Gunicorn Sync) |
+| Mixed CPU + blocking I/O | Gunicorn GThread, Waitress |
+| High network concurrency | asyncio / Uvicorn / Sanic / aiohttp |
+| Thousands of idle connections | gevent |
+| Maximum ASGI performance | Uvicorn + uvloop |
+| Lowest Python networking overhead | Granian |
+| Baseline comparisons | stdlib HTTPServer / ThreadingHTTPServer |
