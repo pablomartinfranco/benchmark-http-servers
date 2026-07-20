@@ -164,3 +164,179 @@ bench-asyncio-sanic-httptools-uvloop
 bench-asgi-bare-uvicorn-uvloop
 bench-asgi-fastapi-uvicorn-uvloop
 ```
+
+---
+
+Examples: **"respond to HTTP requests using CPython 3.11"**, the simplest possible servers built into the standard library.
+
+```python
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Hello, world!")
+
+HTTPServer(("0.0.0.0", 8000), Handler).serve_forever()
+```
+
+Run it:
+
+```bash
+python server.py
+```
+
+Test it:
+
+```bash
+curl http://localhost:8000/
+```
+
+Response:
+
+```
+Hello, world!
+```
+
+---
+
+If you just need a quick static file server, CPython already includes one:
+
+```bash
+python -m http.server 8000
+```
+
+---
+
+If you want to respond to different paths:
+
+```python
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/":
+            body = b"Home"
+        elif self.path == "/hello":
+            body = b"Hello!"
+        else:
+            self.send_error(404)
+            return
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+HTTPServer(("localhost", 8000), Handler).serve_forever()
+```
+
+This uses only the Python 3.11 standard library—no third-party packages required.
+
+If instead you meant **respond to raw TCP requests**, **HTTPS**, or **REST APIs (e.g., JSON endpoints)**, the simplest solution is slightly different.
+
+
+
+No. The code as written is **synchronous**.
+
+`HTTPServer` processes **one request at a time**. If one request takes 5 seconds, every other client waits until it's finished.
+
+### Option 1: Threading (simplest)
+
+If you just want to handle multiple clients concurrently, replace `HTTPServer` with `ThreadingHTTPServer`:
+
+```python
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Hello")
+
+ThreadingHTTPServer(("localhost", 8000), Handler).serve_forever()
+```
+
+Each request runs in its own thread.
+
+---
+
+### Option 2: asyncio
+
+The standard `http.server` module is **not** based on `asyncio`, so you cannot write:
+
+```python
+async def do_GET(self):
+    ...
+```
+
+and have it work.
+
+If you want true async I/O, you'd typically use an asyncio-based framework like:
+
+* `aiohttp`
+* `FastAPI` (via `uvicorn`)
+* `Quart`
+
+Example with `aiohttp`:
+
+```python
+from aiohttp import web
+
+async def hello(request):
+    return web.Response(text="Hello!")
+
+app = web.Application()
+app.router.add_get("/", hello)
+
+web.run_app(app, port=8000)
+```
+
+---
+
+### Option 3: Write your own asyncio server (standard library only)
+
+Python's standard library includes `asyncio.start_server()`, so you can implement an HTTP server yourself:
+
+```python
+import asyncio
+
+async def handle(reader, writer):
+    await reader.read(1024)
+
+    response = (
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: 5\r\n"
+        "\r\n"
+        "Hello"
+    )
+
+    writer.write(response.encode())
+    await writer.drain()
+    writer.close()
+    await writer.wait_closed()
+
+async def main():
+    server = await asyncio.start_server(handle, "0.0.0.0", 8000)
+    async with server:
+        await server.serve_forever()
+
+asyncio.run(main())
+```
+
+This is fully asynchronous and uses only the Python 3.11 standard library.
+
+### Conclusions
+
+* **Simple HTTP server:** `ThreadingHTTPServer`
+* **High-concurrency async server:** `aiohttp` or `FastAPI`
+* **No dependencies and true async:** `asyncio.start_server()` with your own minimal HTTP parsing.
+
+
+
+
+
