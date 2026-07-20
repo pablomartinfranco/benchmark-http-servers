@@ -15,7 +15,7 @@ Environment variables:
 - `WORKERS` (used by Gunicorn/Granian examples, default `1`)
 - `THREADS` (used by Gunicorn gthread example, default `8`)
 
-# Benchmark Configuration Cheat Sheet
+# Benchmark Configurations
 
 This document summarizes the execution model of every benchmark configuration.
 
@@ -142,3 +142,25 @@ This document summarizes the execution model of every benchmark configuration.
 | Maximum ASGI performance | Uvicorn + uvloop |
 | Lowest Python networking overhead | Granian |
 | Baseline comparisons | stdlib HTTPServer / ThreadingHTTPServer |
+
+---
+
+# if I had to pick only 12 configurations
+
+```bash
+bench-stdlib-httpserver (python http parser) # single thread
+bench-stdlib-threadinghttpserver (python http parser) # kernel thread / request
+bench-stdlib-asyncio-default (manual http parser) # event loop
+bench-stdlib-asyncio-uvloop (manual http parser) # event loop
+
+bench-wsgi-waitress (thread pool) # windows friendly
+bench-wsgi-gunicorn-sync (multi process) # linux standard
+bench-wsgi-gunicorn-gthread (processes + thread pools) # mixed workloads
+bench-wsgi-gunicorn-gevent (processes + greenlets) # cooperative i/o
+
+bench-asyncio-aiohttp-default
+bench-asyncio-sanic-httptools-uvloop
+
+bench-asgi-bare-uvicorn-uvloop
+bench-asgi-fastapi-uvicorn-uvloop
+```
