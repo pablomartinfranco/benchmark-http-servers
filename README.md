@@ -21,10 +21,10 @@ This document summarizes the execution model of every benchmark configuration.
 
 | Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | I/O | Best For | Notes |
 |-----------|----------|-------------|-------------------|------------|--------------|----------|------|
-| **bench-tier1-stdlib-httpserver** | stdlib | Python | Single-thread | Sequential | Blocking | CPU-bound (single client), testing | Processes one request at a time. Simplest possible HTTP server. |
-| **bench-tier1-stdlib-threadinghttpserver** | stdlib | Python | Thread per request | OS kernel threads | Blocking | Mixed, low/moderate concurrency | Every connection gets its own OS thread. Simple but expensive at high concurrency. |
-| **bench-tier1-stdlib-asyncio-default** | asyncio | Manual | Async coroutines | asyncio event loop | Non blocking | I/O-bound | Single-thread cooperative multitasking using `async/await`. |
-| **bench-tier1-stdlib-asyncio-uvloop** | asyncio + uvloop | Manual | Async coroutines | libuv event loop | Non blocking | I/O-bound | Same architecture as above but replaces asyncio scheduler with libuv for lower overhead. |
+| **bench-tier1-stdlib-httpserver** | stdlib | Python | Single-thread | Sequential | ❌ Blocking | CPU-bound (single client), testing | Processes one request at a time. Simplest possible HTTP server. |
+| **bench-tier1-stdlib-threadinghttpserver** | stdlib | Python | Thread per request | OS kernel threads | ❌ Blocking | Mixed, low/moderate concurrency | Every connection gets its own OS thread. Simple but expensive at high concurrency. |
+| **bench-tier1-stdlib-asyncio-default** | asyncio | Manual | Async coroutines | asyncio event loop | ✅ Non blocking | I/O-bound | Single-thread cooperative multitasking using `async/await`. |
+| **bench-tier1-stdlib-asyncio-uvloop** | asyncio + uvloop | Manual | Async coroutines | libuv event loop | ✅ Non blocking | I/O-bound | Same architecture as above but replaces asyncio scheduler with libuv for lower overhead. |
 
 ---
 
