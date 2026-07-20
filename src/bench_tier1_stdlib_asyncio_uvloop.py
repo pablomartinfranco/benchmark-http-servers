@@ -1,8 +1,10 @@
 import asyncio
 import os
 
-import uvloop
-
+try:
+    import uvloop  # type: ignore[import]
+except ImportError:
+    uvloop = None
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
@@ -10,9 +12,7 @@ BODY = b"ok"
 RESPONSE = (
     b"HTTP/1.1 200 OK\r\n"
     b"Content-Type: text/plain\r\n"
-    b"Connection: close\r\n"
-    + f"Content-Length: {len(BODY)}\r\n\r\n".encode("ascii")
-    + BODY
+    b"Connection: close\r\n" + f"Content-Length: {len(BODY)}\r\n\r\n".encode("ascii") + BODY
 )
 
 
@@ -36,5 +36,6 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    if uvloop is not None:
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # type: ignore[attr-defined]
     asyncio.run(main())

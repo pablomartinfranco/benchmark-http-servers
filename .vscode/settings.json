@@ -1,0 +1,95 @@
+// {
+//   "editor.fontSize": 18,
+//   "python.terminal.activateEnvironment": true,
+//   "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+//   "[python]": {
+//     "editor.defaultFormatter": "charliermarsh.ruff",
+//     "editor.formatOnSave": true
+//   },
+//   "ruff.organizeImports": true
+// }
+{
+  // =========================
+  // FONT & TEXT COMFORT
+  // =========================
+  "editor.fontFamily": "JetBrains Mono, Cascadia Code, Fira Code, Consolas, monospace",
+  "editor.fontSize": 18,
+  "editor.lineHeight": 26,
+  "editor.fontLigatures": true,
+  "editor.fontWeight": "400",
+
+  // =========================
+  // VISUAL COMFORT
+  // =========================
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.cursorBlinking": "smooth",
+  "editor.renderLineHighlight": "gutter",
+  "editor.renderWhitespace": "none",
+  "editor.guides.indentation": true,
+  "editor.bracketPairColorization.enabled": true,
+
+  // Reduce harsh UI noise
+  // "workbench.colorTheme": "Default Dark+",
+  "workbench.tree.indent": 16,
+  "editor.minimap.enabled": false,
+
+  // =========================
+  // SPACING (reduces eye fatigue)
+  // =========================
+  "editor.letterSpacing": 0.3,
+
+  // =========================
+  // PYTHON SETUP (uv + FastAPI)
+  // =========================
+  "python.terminal.activateEnvironment": true,
+  "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+
+  // =========================
+  // PYTHON ANALYSIS (IntelliSense)
+  // =========================
+  "python.analysis.extraPaths": ["./src"],
+  "python.analysis.autoImportCompletions": true,
+  // "python.analysis.typeCheckingMode": "basic",
+  // "python.analysis.typeCheckingMode": "standard",
+  "python.analysis.typeCheckingMode": "strict",
+
+  // =========================
+  // RUFF (formatter + lint)
+  // =========================
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true
+  },
+
+  "editor.codeActionsOnSave": {
+    "source.fixAll.ruff": "always",
+    "source.organizeImports.ruff": "always"
+  },
+
+  // =========================
+  // TERMINAL (often overlooked for eye strain)
+  // =========================
+  "terminal.integrated.fontSize": 15,
+  "terminal.integrated.lineHeight": 1.3,
+  "terminal.integrated.cursorBlinking": true,
+  "terminal.integrated.smoothScrolling": true,
+  "terminal.integrated.fontFamily": "JetBrains Mono",
+
+  // =========================
+  // PERFORMANCE / CLEAN UI
+  // =========================
+  "editor.minimap.maxColumn": 120,
+  "breadcrumbs.enabled": false,
+  "editor.scrollBeyondLastLine": false,
+
+  // =========================
+  // FILE EXCLUSIONS (clean explorer)
+  // =========================
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true
+  }
+}

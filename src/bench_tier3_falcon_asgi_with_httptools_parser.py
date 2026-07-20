@@ -2,13 +2,12 @@ import os
 
 import falcon.asgi
 
-
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 
 
 class HelloResource:
-    async def on_get(self, req, resp):
+    async def on_get(self, req, resp):  # type: ignore[no-untyped-def]
         resp.text = "ok"
 
 

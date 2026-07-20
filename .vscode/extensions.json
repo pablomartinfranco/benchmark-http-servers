@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    // Python Essentials
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff",
+    // JS+CSS Essentials
+    "dsznajder.es7-react-js-snippets",
+    "bradlc.vscode-tailwindcss",
+    "ecmel.vscode-html-css",
+    // Other Essentials
+    "christian-kohler.path-intellisense",
+    // WSL & debuggers
+    "ms-vscode-remote.remote-wsl",
+    "firefox-devtools.vscode-firefox-debug"
+  ]
+}

@@ -1,19 +1,18 @@
 import os
 
 import uvicorn
-from litestar import Litestar, get
-
+from quart import Quart
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 
 
-@get("/")
+app = Quart(__name__)
+
+
+@app.get("/")
 async def home() -> str:
     return "ok"
-
-
-app = Litestar(route_handlers=[home])
 
 
 if __name__ == "__main__":

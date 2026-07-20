@@ -1,16 +1,13 @@
 import asyncio
 import os
 
-
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 BODY = b"ok"
 RESPONSE = (
     b"HTTP/1.1 200 OK\r\n"
     b"Content-Type: text/plain\r\n"
-    b"Connection: close\r\n"
-    + f"Content-Length: {len(BODY)}\r\n\r\n".encode("ascii")
-    + BODY
+    b"Connection: close\r\n" + f"Content-Length: {len(BODY)}\r\n\r\n".encode("ascii") + BODY
 )
 
 

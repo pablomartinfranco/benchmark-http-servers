@@ -1,7 +1,6 @@
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 BODY = b"ok"
@@ -15,8 +14,8 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(BODY)
 
-    def log_message(self, *_):
-        return
+    # def log_message(self, *_):
+    #     return
 
 
 if __name__ == "__main__":

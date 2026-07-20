@@ -1,20 +1,18 @@
 import os
 
 import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import PlainTextResponse
-
+from litestar import Litestar, get
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 
 
-app = FastAPI()
-
-
-@app.get("/", response_class=PlainTextResponse)
+@get("/")
 async def home() -> str:
     return "ok"
+
+
+app = Litestar(route_handlers=[home])
 
 
 if __name__ == "__main__":

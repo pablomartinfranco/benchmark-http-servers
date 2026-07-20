@@ -2,29 +2,28 @@ import os
 
 from gunicorn.app.base import BaseApplication
 
-
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 WORKERS = int(os.getenv("WORKERS", "1"))
 THREADS = int(os.getenv("THREADS", "8"))
 
 
-def app(environ, start_response):
+def app(environ, start_response):  # type: ignore[no-untyped-def]
     body = b"ok"
     start_response("200 OK", [("Content-Type", "text/plain"), ("Content-Length", str(len(body)))])
     return [body]
 
 
 class GunicornApplication(BaseApplication):
-    def __init__(self, application, options=None):
+    def __init__(self, application, options=None):  # type: ignore[no-untyped-def]
         self.application = application
-        self.options = options or {}
+        self.options = options or {}  # type: ignore[no-untyped-def]
         super().__init__()
 
     def load_config(self):
-        for key, value in self.options.items():
+        for key, value in self.options.items():  # type: ignore[no-untyped-def]
             if key in self.cfg.settings and value is not None:
-                self.cfg.set(key.lower(), value)
+                self.cfg.set(key.lower(), value)  # type: ignore[no-untyped-def]
 
     def load(self):
         return self.application
@@ -32,7 +31,7 @@ class GunicornApplication(BaseApplication):
 
 if __name__ == "__main__":
     GunicornApplication(
-        app,
+        app,  # type: ignore[no-untyped-def]
         {
             "bind": f"{HOST}:{PORT}",
             "workers": WORKERS,

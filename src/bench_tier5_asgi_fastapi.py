@@ -1,17 +1,17 @@
 import os
 
 import uvicorn
-from quart import Quart
-
+from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 
 
-app = Quart(__name__)
+app = FastAPI()
 
 
-@app.get("/")
+@app.get("/", response_class=PlainTextResponse)
 async def home() -> str:
     return "ok"
 

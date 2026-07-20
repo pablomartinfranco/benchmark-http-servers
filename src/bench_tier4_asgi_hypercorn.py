@@ -1,13 +1,14 @@
+import asyncio
 import os
 
-import uvicorn
-
+from hypercorn.asyncio import serve  # type: ignore[import]
+from hypercorn.config import Config
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 
 
-async def app(scope, receive, send):
+async def app(scope, receive, send):  # type: ignore[no-untyped-def]
     if scope["type"] != "http":
         return
     await send(
@@ -20,5 +21,13 @@ async def app(scope, receive, send):
     await send({"type": "http.response.body", "body": b"ok"})
 
 
+async def main() -> None:
+    config = Config()
+    config.bind = [f"{HOST}:{PORT}"]
+    config.use_reloader = False
+    config.accesslog = None
+    await serve(app, config)
+
+
 if __name__ == "__main__":
-    uvicorn.run(app, host=HOST, port=PORT, loop="uvloop", access_log=False)
+    asyncio.run(main())
