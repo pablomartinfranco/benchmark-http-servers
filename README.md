@@ -23,8 +23,8 @@ This document summarizes the execution model of every benchmark configuration.
 |-----------|----------|-------------|-------------------|------------|--------------|----------|------|
 | **bench-tier1-stdlib-httpserver** | stdlib | Python | Single-thread | Sequential | ❌ Blocking | CPU-bound (single client), testing | Processes one request at a time. Simplest possible HTTP server. |
 | **bench-tier1-stdlib-threadinghttpserver** | stdlib | Python | Thread per request | OS kernel threads | ❌ Blocking | Mixed, low/moderate concurrency | Every connection gets its own OS thread. Simple but expensive at high concurrency. |
-| **bench-tier1-stdlib-asyncio-default** | asyncio | Manual | Async coroutines | asyncio event loop | ✅ Non blocking | I/O-bound | Single-thread cooperative multitasking using `async/await`. |
-| **bench-tier1-stdlib-asyncio-uvloop** | asyncio + uvloop | Manual | Async coroutines | libuv event loop | ✅ Non blocking | I/O-bound | Same architecture as above but replaces asyncio scheduler with libuv for lower overhead. |
+| **bench-tier1-stdlib-asyncio-default** | asyncio | Manual | Async coroutines | asyncio event loop | ✅ Non-blocking | I/O-bound | Single-thread cooperative multitasking using `async/await`. |
+| **bench-tier1-stdlib-asyncio-uvloop** | asyncio + uvloop | Manual | Async coroutines | libuv event loop | ✅ Non-blocking | I/O-bound | Same architecture as above but replaces asyncio scheduler with libuv for lower overhead. |
 
 ---
 
@@ -45,10 +45,10 @@ This document summarizes the execution model of every benchmark configuration.
 
 | Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
 |-----------|----------|-------------|-------------------|------------|--------------|----------|------|
-| **bench-tier3-aiohttp-with-aiohttp-parser** | aiohttp | aiohttp C parser | Async coroutines | asyncio / uvloop | Non-blocking | I/O-bound | Mature asyncio-native HTTP framework. |
-| **bench-tier3-sanic-with-httptools-parser** | Sanic | httptools (llhttp) | Async coroutines | asyncio / uvloop | Non-blocking | I/O-bound | Optimized for low latency and high throughput. |
-| **bench-tier3-blacksheep-with-httptools-parser** | BlackSheep | httptools | Async coroutines | asyncio / uvloop | Non-blocking | I/O-bound | Minimal overhead ASGI framework. |
-| **bench-tier3-falcon-asgi-with-httptools-parser** | Falcon ASGI | httptools | Async coroutines | asyncio / uvloop | Non-blocking | I/O-bound | Lightweight ASGI implementation focused on performance. |
+| **bench-tier3-aiohttp-with-aiohttp-parser** | aiohttp | aiohttp C parser | Async coroutines | asyncio / uvloop | ✅ Non-blocking | I/O-bound | Mature asyncio-native HTTP framework. |
+| **bench-tier3-sanic-with-httptools-parser** | Sanic | httptools (llhttp) | Async coroutines | asyncio / uvloop | ✅ Non-blocking | I/O-bound | Optimized for low latency and high throughput. |
+| **bench-tier3-blacksheep-with-httptools-parser** | BlackSheep | httptools | Async coroutines | asyncio / uvloop | ✅ Non-blocking | I/O-bound | Minimal overhead ASGI framework. |
+| **bench-tier3-falcon-asgi-with-httptools-parser** | Falcon ASGI | httptools | Async coroutines | asyncio / uvloop | ✅ Non-blocking | I/O-bound | Lightweight ASGI implementation focused on performance. |
 
 ---
 
@@ -56,10 +56,10 @@ This document summarizes the execution model of every benchmark configuration.
 
 | Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
 |-----------|----------|-------------|-------------------|------------|--------------|----------|------|
-| **bench-tier4-asgi-uvicorn-default** | Uvicorn | httptools | Async coroutines | asyncio | Non-blocking | I/O-bound | Most common ASGI deployment. |
-| **bench-tier4-asgi-uvicorn-uvloop** | Uvicorn | httptools | Async coroutines | uvloop (libuv) | Non-blocking | I/O-bound | Faster scheduler with lower event-loop overhead. |
-| **bench-tier4-asgi-hypercorn** | Hypercorn | h11 / httptools | Async coroutines | asyncio / Trio / uvloop | Non-blocking | I/O-bound | Supports multiple async runtimes including Trio. |
-| **bench-tier4-asgi-daphne** | Daphne | Twisted HTTP | Async callbacks | Twisted Reactor | Non-blocking | I/O-bound | Reference ASGI server used by Django Channels. |
+| **bench-tier4-asgi-uvicorn-default** | Uvicorn | httptools | Async coroutines | asyncio | ✅ Non-blocking | I/O-bound | Most common ASGI deployment. |
+| **bench-tier4-asgi-uvicorn-uvloop** | Uvicorn | httptools | Async coroutines | uvloop (libuv) | ✅ Non-blocking | I/O-bound | Faster scheduler with lower event-loop overhead. |
+| **bench-tier4-asgi-hypercorn** | Hypercorn | h11 / httptools | Async coroutines | asyncio / Trio / uvloop | ✅ Non-blocking | I/O-bound | Supports multiple async runtimes including Trio. |
+| **bench-tier4-asgi-daphne** | Daphne | Twisted HTTP | Async callbacks | Twisted Reactor | ✅ Non-blocking | I/O-bound | Reference ASGI server used by Django Channels. |
 
 ---
 
@@ -69,11 +69,11 @@ This document summarizes the execution model of every benchmark configuration.
 
 | Benchmark | Framework | Protocol | Scheduling | Blocking I/O | Best For | Notes |
 |-----------|-----------|----------|------------|--------------|----------|------|
-| **bench-tier5-asgi-bare-app** | Bare ASGI | ASGI | Event loop | Non-blocking | I/O-bound | Measures raw ASGI overhead. |
-| **bench-tier5-asgi-starlette** | Starlette | ASGI | Event loop | Non-blocking | I/O-bound | Lightweight ASGI toolkit. |
-| **bench-tier5-asgi-fastapi** | FastAPI | ASGI | Event loop | Non-blocking | I/O-bound | Adds dependency injection and Pydantic validation. |
-| **bench-tier5-asgi-litestar** | Litestar | ASGI | Event loop | Non-blocking | I/O-bound | Performance-oriented ASGI framework. |
-| **bench-tier5-asgi-quart** | Quart | ASGI | Event loop | Non-blocking | I/O-bound | Async-compatible Flask implementation. |
+| **bench-tier5-asgi-bare-app** | Bare ASGI | ASGI | Event loop | ✅ Non-blocking | I/O-bound | Measures raw ASGI overhead. |
+| **bench-tier5-asgi-starlette** | Starlette | ASGI | Event loop | ✅ Non-blocking | I/O-bound | Lightweight ASGI toolkit. |
+| **bench-tier5-asgi-fastapi** | FastAPI | ASGI | Event loop | ✅ Non-blocking | I/O-bound | Adds dependency injection and Pydantic validation. |
+| **bench-tier5-asgi-litestar** | Litestar | ASGI | Event loop | ✅ Non-blocking | I/O-bound | Performance-oriented ASGI framework. |
+| **bench-tier5-asgi-quart** | Quart | ASGI | Event loop | ✅ Non-blocking | I/O-bound | Async-compatible Flask implementation. |
 
 ---
 
@@ -81,9 +81,9 @@ This document summarizes the execution model of every benchmark configuration.
 
 | Benchmark | Runtime | HTTP Parser | Concurrency Model | Scheduling | Blocking I/O | Best For | Notes |
 |-----------|----------|-------------|-------------------|------------|--------------|----------|------|
-| **bench-tier6-granian-default** | Granian | Rust (hyper) | Native worker threads | Rust runtime | Non-blocking | I/O-bound | Networking handled entirely in Rust before entering Python. |
-| **bench-tier6-granian-fastapi** | Granian + FastAPI | Rust | Native worker threads | Rust runtime | Non-blocking | I/O-bound | FastAPI application running behind Rust HTTP stack. |
-| **bench-tier6-granian-bare-asgi** | Granian + Bare ASGI | Rust | Native worker threads | Rust runtime | Non-blocking | I/O-bound | Lowest-overhead Granian benchmark. |
+| **bench-tier6-granian-default** | Granian | Rust (hyper) | Native worker threads | Rust runtime | ✅ Non-blocking | I/O-bound | Networking handled entirely in Rust before entering Python. |
+| **bench-tier6-granian-fastapi** | Granian + FastAPI | Rust | Native worker threads | Rust runtime | ✅ Non-blocking | I/O-bound | FastAPI application running behind Rust HTTP stack. |
+| **bench-tier6-granian-bare-asgi** | Granian + Bare ASGI | Rust | Native worker threads | Rust runtime | ✅ Non-blocking | I/O-bound | Lowest-overhead Granian benchmark. |
 
 ---
 
