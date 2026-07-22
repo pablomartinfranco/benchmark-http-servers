@@ -17,7 +17,7 @@ def benchmark(func: Callable[..., Any]) -> Callable[..., Any]:
 
         finally:
             elapsed = time.perf_counter() - start
-            print(f"{func.__name__}: {elapsed:.6f}s")
+            print(f"\n{func.__name__}: {elapsed:.6f}s")
 
     return wrapper
 
