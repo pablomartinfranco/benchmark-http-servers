@@ -14,7 +14,6 @@ dependencies = [
     'uvloop>=0.21.0; platform_system != "Windows"',
     "gunicorn>=26.0.0",
     "aiohttp>=3.14.1",
-    "waitress>=3.0.2",
     "blacksheep>=2.6.3",
     "falcon>=4.3.1",
     "sanic[all]>=25.12.1",
@@ -22,6 +21,8 @@ dependencies = [
     "hypercorn>=0.18.0",
     "litestar[pydantic,standard]>=2.24.0",
     "quart>=0.20.0",
+    "gevent>=26.5.0",
+    "requests>=2.34.2",
 ]
 
 [dependency-groups]

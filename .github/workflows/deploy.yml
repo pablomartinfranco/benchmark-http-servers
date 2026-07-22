@@ -11,18 +11,42 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy to ShockHosting
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: alphalab.com.ar
-          port: 22
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ~/web/0a/wsgi.0a.com.ar
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install rsync
+        run: sudo apt-get update && sudo apt-get install -y rsync
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H alphalab.com.ar >> ~/.ssh/known_hosts
+
+      - name: Sync files
+        run: |
+          rsync -az --delete \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude "__pycache__" \
+            --exclude ".vscode" \
+            --exclude ".venv" \
+            --exclude "venv" \
+            --exclude ".env" \
+            --exclude "env" \
+            --exclude "tmp" \
+            --exclude "stderr.log" \
+            ./wsgi-falcon-gevent/ \
+            ${{ secrets.SSH_USER }}@alphalab.com.ar:~/web/0a/wsgi-falcon-gevent.0a.com.ar/
+
+      - name: Run deploy script
+        run: |
+          ssh ${{ secrets.SSH_USER }}@alphalab.com.ar << 'EOF'
+            cd ~/web/0a/wsgi-falcon-gevent.0a.com.ar
             chmod +x deploy.sh
             ./deploy.sh
+          EOF

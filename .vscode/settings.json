@@ -91,5 +91,12 @@
     "**/.pytest_cache": true,
     "**/.mypy_cache": true,
     "**/.ruff_cache": true
+  },
+
+  // =========================
+  // FILE ASSOCIATIONS
+  // =========================
+  "files.associations": {
+    ".htaccess": "apache"
   }
 }
