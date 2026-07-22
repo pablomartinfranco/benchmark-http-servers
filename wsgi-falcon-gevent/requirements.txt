@@ -2,3 +2,4 @@ falcon
 gevent
 requests
 psutil
+orjson

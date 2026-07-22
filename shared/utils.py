@@ -5,11 +5,12 @@ import time
 import tracemalloc
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from functools import wraps
 from typing import Any
 
 import psutil
+from falcon import Response
 
 # Initialize once when the application starts.
 # Do not start/stop tracemalloc on every request.
@@ -26,15 +27,8 @@ class BenchmarkResult:
     voluntary_switches: int = 0
     involuntary_switches: int = 0
 
-    def to_dict(self) -> dict[str, float | int]:
-        return {
-            "elapsed": self.elapsed,
-            "cpu_time": self.cpu_time,
-            "memory": self.memory,
-            "memory_kb": self.memory / 1024,
-            "voluntary_switches": self.voluntary_switches,
-            "involuntary_switches": self.involuntary_switches,
-        }
+    def to_dict(self):
+        return asdict(self)
 
 
 @contextmanager
@@ -84,8 +78,8 @@ def benchmark(
             result = BenchmarkResult()
 
             if len(args) >= 3:
-                resp = args[2]
-                resp.context["benchmark"] = result.to_dict()
+                resp: Response = args[2]
+                resp.context.benchmark = result
 
             with benchmark_scope(name or target.__name__, result):
                 return target(*args, **kwargs)
