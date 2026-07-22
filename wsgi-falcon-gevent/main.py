@@ -56,34 +56,37 @@ class Cpu_1:
     def on_get(self, req: Request, resp: Response) -> None:
 
         with benchmark_scope("blocking_cpu") as result:
-            fibonacci(35, id=1)
-            fibonacci(35, id=2)
-            # fibonacci(35, id=3)
-            # fibonacci(35, id=4)
-            # fibonacci(35, id=5)
+            fibonacci(25, id=1)
+            fibonacci(25, id=2)
+            fibonacci(25, id=3)
+            fibonacci(25, id=4)
+            fibonacci(25, id=5)
 
-        # resp.media = {
-        #     "status": "ok",
-        #     **result.to_dict(),
-        # }
-        resp.media = result.to_dict()
+        resp.media = {
+            "status": "ok",
+            **result.to_dict(),
+        }
 
 
 class Cpu_2:
     @benchmark(name="non_blocking_cpu")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        jobs: list[Greenlet[..., None]] = [
-            gevent.spawn(fibonacci, n=35, id=1),
-            gevent.spawn(fibonacci, n=35, id=2),
-            # gevent.spawn(fibonacci, n=35, id=3),
-            # gevent.spawn(fibonacci, n=35, id=4),
-            # gevent.spawn(fibonacci, n=35, id=5),
-        ]
+        with benchmark_scope("non_blocking_cpu") as result:
+            jobs: list[Greenlet[..., int]] = [
+                gevent.spawn(fibonacci, n=25, id=1),
+                gevent.spawn(fibonacci, n=25, id=2),
+                gevent.spawn(fibonacci, n=25, id=3),
+                gevent.spawn(fibonacci, n=25, id=4),
+                gevent.spawn(fibonacci, n=25, id=5),
+            ]
 
-        gevent.joinall(jobs)
+            gevent.joinall(jobs)
 
-        resp.media = {"status": "ok"}
+        resp.media = {
+            "status": "ok",
+            **result.to_dict(),
+        }
 
 
 class IO_1:
