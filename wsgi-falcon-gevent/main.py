@@ -6,6 +6,7 @@ monkey.patch_all()
 
 import threading
 import time
+from dataclasses import asdict
 
 import falcon
 import gevent
@@ -127,7 +128,7 @@ class IO_1:
 
         resp.media = {
             # "elapsed": f"{elapsed:.6f}s",
-            "benchmark": resp.context.benchmark,
+            "benchmark": asdict(resp.context.benchmark),
         }
 
 
