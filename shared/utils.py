@@ -26,17 +26,24 @@ class BenchmarkResult:
     voluntary_switches: int = 0
     involuntary_switches: int = 0
 
+    def to_dict(self) -> dict[str, float | int]:
+        return {
+            "elapsed": self.elapsed,
+            "cpu_time": self.cpu_time,
+            "memory": self.memory,
+            "memory_kb": self.memory / 1024,
+            "voluntary_switches": self.voluntary_switches,
+            "involuntary_switches": self.involuntary_switches,
+        }
+
 
 @contextmanager
-def benchmark_scope(name: str = "benchmark") -> Generator[BenchmarkResult, None, None]:
-
-    result = BenchmarkResult()
+def benchmark_scope(name: str, result: BenchmarkResult) -> Generator[BenchmarkResult, None, None]:
 
     start_wall = time.perf_counter_ns()
     start_cpu = time.process_time_ns()
 
     start_memory, _ = tracemalloc.get_traced_memory()
-
     start_context = process.num_ctx_switches()
 
     try:
@@ -45,19 +52,13 @@ def benchmark_scope(name: str = "benchmark") -> Generator[BenchmarkResult, None,
     finally:
         end_wall = time.perf_counter_ns()
         end_cpu = time.process_time_ns()
-
         end_memory, _ = tracemalloc.get_traced_memory()
-
         end_context = process.num_ctx_switches()
 
         result.elapsed = (end_wall - start_wall) / 1_000_000_000
-
         result.cpu_time = (end_cpu - start_cpu) / 1_000_000_000
-
         result.memory = end_memory - start_memory
-
         result.voluntary_switches = end_context.voluntary - start_context.voluntary
-
         result.involuntary_switches = end_context.involuntary - start_context.involuntary
 
         print(
@@ -84,10 +85,9 @@ def benchmark(
 
             if len(args) >= 3:
                 resp = args[2]
-                resp.context["benchmark"] = result
+                resp.context["benchmark"] = result.to_dict()
 
-            with benchmark_scope(name or target.__name__) as measured:
-                result = measured
+            with benchmark_scope(name or target.__name__, result):
                 return target(*args, **kwargs)
 
         return wrapper
