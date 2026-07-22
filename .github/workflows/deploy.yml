@@ -46,9 +46,9 @@ jobs:
             ./wsgi-falcon-gevent/ \
             ${{ secrets.SSH_USER }}@alphalab.com.ar:~/web/0a/wsgi-falcon-gevent.0a.com.ar/
 
-      - name: Sync lib files
+      - name: Sync shared files
         run: |
-          rsync -az ./lib/ ${{ secrets.SSH_USER }}@alphalab.com.ar:~/web/0a/wsgi-falcon-gevent.0a.com.ar/lib/
+          rsync -az ./shared/ ${{ secrets.SSH_USER }}@alphalab.com.ar:~/web/0a/wsgi-falcon-gevent.0a.com.ar/shared/
 
       - name: Run deploy script
         run: |

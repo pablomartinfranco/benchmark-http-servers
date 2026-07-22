@@ -1,7 +1,7 @@
 # ruff: noqa: E402
 from gevent import monkey
 
-from lib.utils import benchmark, blocking_io, fibonacci, gen_items, hash
+from shared.utils import benchmark, blocking_io, fibonacci, gen_items, hash
 
 monkey.patch_all()
 
