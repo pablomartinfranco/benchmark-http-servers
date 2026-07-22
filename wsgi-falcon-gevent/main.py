@@ -16,13 +16,13 @@ from shared.utils import benchmark, benchmark_scope, blocking_io, fibonacci, gen
 
 
 class Plain:
-    @benchmark(name="plain")
+    @benchmark(name="plain_outer")
     def on_get(self, req: Request, resp: Response) -> None:
         resp.media = {"status": "ok"}
 
 
 class Json_1:
-    @benchmark(name="blocking_json")
+    @benchmark(name="json_1_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
         items_1 = gen_items(100, id=1)
@@ -35,7 +35,7 @@ class Json_1:
 
 
 class Json_2:
-    @benchmark(name="non_blocking_json")
+    @benchmark(name="json_2_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
         jobs: list[Greenlet[..., None]] = [
@@ -52,10 +52,10 @@ class Json_2:
 
 
 class Cpu_1:
-    @benchmark(name="blocking_cpu_outer")
+    @benchmark(name="cpu_1_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        with benchmark_scope("blocking_cpu_inner") as result:
+        with benchmark_scope("cpu_1_inner") as result:
             fibonacci(30, id=1)
             fibonacci(30, id=2)
             fibonacci(30, id=3)
@@ -69,10 +69,10 @@ class Cpu_1:
 
 
 class Cpu_2:
-    @benchmark(name="non_blocking_cpu_outer")
+    @benchmark(name="cpu_2_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        with benchmark_scope("non_blocking_cpu_inner") as result:
+        with benchmark_scope("cpu_2_inner") as result:
             jobs: list[Greenlet[..., int]] = [
                 gevent.spawn(fibonacci, n=30, id=1),
                 gevent.spawn(fibonacci, n=30, id=2),
@@ -90,37 +90,45 @@ class Cpu_2:
 
 
 class IO_1:
-    @benchmark(name="blocking_io")
+    @benchmark(name="io_1_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        blocking_io(id=1)
-        blocking_io(id=2)
-        blocking_io(id=3)
-        blocking_io(id=4)
-        blocking_io(id=5)
+        with benchmark_scope("io_1_inner") as result:
+            blocking_io(id=1)
+            blocking_io(id=2)
+            blocking_io(id=3)
+            blocking_io(id=4)
+            blocking_io(id=5)
 
-        resp.media = {"status": "ok"}
+        resp.media = {
+            "status": "ok",
+            **result.to_dict(),
+        }
 
 
 class IO_2:
-    @benchmark(name="non_blocking_io")
+    @benchmark(name="io_2_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        jobs: list[Greenlet[..., None]] = [
-            gevent.spawn(blocking_io, id=1),
-            gevent.spawn(blocking_io, id=2),
-            gevent.spawn(blocking_io, id=3),
-            gevent.spawn(blocking_io, id=4),
-            gevent.spawn(blocking_io, id=5),
-        ]
+        with benchmark_scope("io_2_inner") as result:
+            jobs: list[Greenlet[..., None]] = [
+                gevent.spawn(blocking_io, id=1),
+                gevent.spawn(blocking_io, id=2),
+                gevent.spawn(blocking_io, id=3),
+                gevent.spawn(blocking_io, id=4),
+                gevent.spawn(blocking_io, id=5),
+            ]
 
-        gevent.joinall(jobs)
+            gevent.joinall(jobs)
 
-        resp.media = {"status": "ok"}
+        resp.media = {
+            "status": "ok",
+            **result.to_dict(),
+        }
 
 
 class HTTP_1:
-    @benchmark(name="blocking_http")
+    @benchmark(name="http_1_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
         resp_1 = requests.get("https://httpbin.org/delay/1")
@@ -135,7 +143,7 @@ class HTTP_1:
 
 
 class HTTP_2:
-    @benchmark(name="non_blocking_http")
+    @benchmark(name="http_2_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
         jobs: list[Greenlet[..., requests.Response]] = [
@@ -152,7 +160,7 @@ class HTTP_2:
 
 
 class HTTPCall:
-    @benchmark(name="http_call")
+    @benchmark(name="http_call_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
         r = requests.get("https://httpbin.org/get", timeout=10)
@@ -168,7 +176,7 @@ class HTTPCall:
 
 
 class Echo:
-    @benchmark(name="post_echo")
+    @benchmark(name="echo_outer")
     def on_post(self, req: Request, resp: Response) -> None:
 
         data = req.media
@@ -177,7 +185,7 @@ class Echo:
 
 
 class Hash_1:
-    @benchmark(name="blocking_hash")
+    @benchmark(name="hash_1_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
         data = b"x" * 10_000_000
@@ -192,7 +200,7 @@ class Hash_1:
 
 
 class Hash_2:
-    @benchmark(name="non_blocking_hash")
+    @benchmark(name="hash_2_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
         data = b"x" * 10_000_000
