@@ -1,5 +1,4 @@
 # ruff: noqa: E402
-from typing import Any
 
 from gevent import monkey
 
@@ -7,14 +6,11 @@ monkey.patch_all()
 
 import threading
 import time
-from dataclasses import asdict, is_dataclass
 
 import falcon
 import gevent
-import orjson
 import requests
 from falcon import Request, Response
-from falcon.media import JSONHandler
 from gevent import config, get_hub
 from gevent.greenlet import Greenlet
 
@@ -355,31 +351,7 @@ class GeventYield:
         }
 
 
-def json_default(obj: Any) -> Any:
-    if is_dataclass(obj):
-        return asdict(obj)  # type: ignore[no-any-return]
-
-    if hasattr(obj, "model_dump"):
-        return obj.model_dump()
-
-    if hasattr(obj, "__dict__"):
-        return vars(obj)  # type: ignore[no-any-return]
-
-    raise TypeError(f"{type(obj).__name__} is not JSON serializable")
-
-
-def json_dumps(obj: Any) -> bytes:
-    return orjson.dumps(obj, default=json_default)
-
-
-json_handler = JSONHandler(dumps=json_dumps)
-
-
-app = falcon.App(  # type: ignore[arg-type]
-    media_handlers={"application/json": json_handler}
-)
-
-# app = falcon.App()
+app = falcon.App()
 
 
 app.add_route("/plain", Plain())
