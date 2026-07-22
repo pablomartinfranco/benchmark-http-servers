@@ -18,7 +18,8 @@ tracemalloc.start()
 process = psutil.Process()
 
 
-@dataclass(slots=True)
+# @dataclass(slots=True)
+@dataclass
 class BenchmarkResult:
     elapsed: float = 0.0
     cpu_time: float = 0.0

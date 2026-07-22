@@ -1,5 +1,4 @@
 # ruff: noqa: E402
-
 from gevent import monkey
 
 monkey.patch_all()
@@ -63,10 +62,11 @@ class Cpu_1:
             fibonacci(35, id=4)
             fibonacci(35, id=5)
 
-        resp.media = {
-            "status": "ok",
-            **result.to_dict(),
-        }
+        # resp.media = {
+        #     "status": "ok",
+        #     **result.to_dict(),
+        # }
+        resp.media = result.to_dict()
 
 
 class Cpu_2:
