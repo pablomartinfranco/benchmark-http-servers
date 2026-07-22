@@ -45,7 +45,6 @@ class Json_2:
             gevent.spawn(gen_items, n=100, id=4),
             gevent.spawn(gen_items, n=100, id=5),
         ]
-
         gevent.joinall(jobs)
 
         resp.media = {"items": [job.get() for job in jobs]}
@@ -80,7 +79,6 @@ class Cpu_2:
                 gevent.spawn(fibonacci, n=31, id=4),
                 gevent.spawn(fibonacci, n=31, id=5),
             ]
-
             gevent.joinall(jobs)
 
         resp.media = {
@@ -118,7 +116,6 @@ class IO_2:
                 gevent.spawn(blocking_io, id=4),
                 gevent.spawn(blocking_io, id=5),
             ]
-
             gevent.joinall(jobs)
 
         resp.media = {
@@ -131,32 +128,38 @@ class HTTP_1:
     @benchmark(name="http_1_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        resp_1 = requests.get("https://httpbin.org/delay/1")
-        resp_2 = requests.get("https://httpbin.org/delay/1")
-        resp_3 = requests.get("https://httpbin.org/delay/1")
-        resp_4 = requests.get("https://httpbin.org/delay/1")
-        resp_5 = requests.get("https://httpbin.org/delay/1")
+        with benchmark_scope("io_2_inner") as result:
+            resp_1 = requests.get("https://httpbin.org/delay/1")
+            resp_2 = requests.get("https://httpbin.org/delay/1")
+            resp_3 = requests.get("https://httpbin.org/delay/1")
+            resp_4 = requests.get("https://httpbin.org/delay/1")
+            resp_5 = requests.get("https://httpbin.org/delay/1")
+            responses = [resp_1, resp_2, resp_3, resp_4, resp_5]
 
-        responses = [resp_1, resp_2, resp_3, resp_4, resp_5]
-
-        resp.media = {"responses": [resp.status_code for resp in responses]}
+        resp.media = {
+            "responses": [resp.status_code for resp in responses],
+            **result.to_dict(),
+        }
 
 
 class HTTP_2:
     @benchmark(name="http_2_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        jobs: list[Greenlet[..., requests.Response]] = [
-            gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
-            gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
-            gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
-            gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
-            gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
-        ]
+        with benchmark_scope("http_2_inner") as result:
+            jobs: list[Greenlet[..., requests.Response]] = [
+                gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
+                gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
+                gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
+                gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
+                gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
+            ]
+            gevent.joinall(jobs)
 
-        gevent.joinall(jobs)
-
-        resp.media = {"responses": [job.get().status_code for job in jobs]}
+        resp.media = {
+            "responses": [job.get().status_code for job in jobs],
+            **result.to_dict(),
+        }
 
 
 class HTTPCall:
@@ -188,34 +191,39 @@ class Hash_1:
     @benchmark(name="hash_1_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        data = b"x" * 10_000_000
+        with benchmark_scope("hash_1_inner") as result:
+            data = b"x" * 10_000_000
+            dig_1 = hash(data, id=1)
+            dig_2 = hash(data, id=2)
+            dig_3 = hash(data, id=3)
+            dig_4 = hash(data, id=4)
+            dig_5 = hash(data, id=5)
 
-        dig_1 = hash(data, id=1)
-        dig_2 = hash(data, id=2)
-        dig_3 = hash(data, id=3)
-        dig_4 = hash(data, id=4)
-        dig_5 = hash(data, id=5)
-
-        resp.media = {"sha256": [dig_1, dig_2, dig_3, dig_4, dig_5]}
+        resp.media = {
+            "sha256": [dig_1, dig_2, dig_3, dig_4, dig_5],
+            **result.to_dict(),
+        }
 
 
 class Hash_2:
     @benchmark(name="hash_2_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        data = b"x" * 10_000_000
+        with benchmark_scope("hash_1_inner") as result:
+            data = b"x" * 10_000_000
+            jobs: list[Greenlet[..., None]] = [
+                gevent.spawn(hash, data, id=1),
+                gevent.spawn(hash, data, id=2),
+                gevent.spawn(hash, data, id=3),
+                gevent.spawn(hash, data, id=4),
+                gevent.spawn(hash, data, id=5),
+            ]
+            gevent.joinall(jobs)
 
-        jobs: list[Greenlet[..., None]] = [
-            gevent.spawn(hash, data, id=1),
-            gevent.spawn(hash, data, id=2),
-            gevent.spawn(hash, data, id=3),
-            gevent.spawn(hash, data, id=4),
-            gevent.spawn(hash, data, id=5),
-        ]
-
-        gevent.joinall(jobs)
-
-        resp.media = {"sha256": [job.get() for job in jobs]}
+        resp.media = {
+            "sha256": [job.get() for job in jobs],
+            **result.to_dict(),
+        }
 
 
 class GeventInfo:
@@ -263,24 +271,25 @@ class GeventInfo:
 class GeventYield:
     def on_get(self, req: Request, resp: Response) -> None:
 
-        events: list[str] = []
+        with benchmark_scope("hash_1_inner") as result:
+            events: list[str] = []
 
-        def worker(id: int) -> None:
-            events.append(f"{id}-start")
-            gevent.sleep(0)
-            events.append(f"{id}-end")
+            def worker(id: int) -> None:
+                events.append(f"{id}-start")
+                gevent.sleep(0)
+                events.append(f"{id}-end")
 
-        jobs: list[Greenlet[..., None]] = [
-            gevent.spawn(worker, 1),
-            gevent.spawn(worker, 2),
-            gevent.spawn(worker, 3),
-        ]
-
-        gevent.joinall(jobs)
+            jobs: list[Greenlet[..., None]] = [
+                gevent.spawn(worker, 1),
+                gevent.spawn(worker, 2),
+                gevent.spawn(worker, 3),
+            ]
+            gevent.joinall(jobs)
 
         resp.media = {
             "events": events,
             "greenlets": len(jobs),
+            **result.to_dict(),
         }
 
 
