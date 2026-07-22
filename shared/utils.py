@@ -16,7 +16,7 @@ import psutil
 # Do not start/stop tracemalloc on every request.
 tracemalloc.start()
 
-process = psutil.Process()
+process = psutil.Process(os.getpid())
 
 print(f"os pid={os.getpid()} psutil pid={process.pid}", flush=True)
 
