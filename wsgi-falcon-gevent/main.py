@@ -52,10 +52,10 @@ class Json_2:
 
 
 class Cpu_1:
-    @benchmark(name="blocking_cpu")
+    @benchmark(name="blocking_cpu_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        with benchmark_scope("blocking_cpu") as result:
+        with benchmark_scope("blocking_cpu_inner") as result:
             fibonacci(30, id=1)
             fibonacci(30, id=2)
             fibonacci(30, id=3)
@@ -69,10 +69,10 @@ class Cpu_1:
 
 
 class Cpu_2:
-    @benchmark(name="non_blocking_cpu")
+    @benchmark(name="non_blocking_cpu_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        with benchmark_scope("non_blocking_cpu") as result:
+        with benchmark_scope("non_blocking_cpu_inner") as result:
             jobs: list[Greenlet[..., int]] = [
                 gevent.spawn(fibonacci, n=30, id=1),
                 gevent.spawn(fibonacci, n=30, id=2),
