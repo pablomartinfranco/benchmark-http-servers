@@ -33,7 +33,7 @@ class BenchmarkResult:
 def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
 
     process = psutil.Process(os.getpid())
-    print(f"\nos pid={os.getpid()} psutil pid={process.pid}", flush=True)
+    # print(f"\nos pid={os.getpid()} psutil pid={process.pid}", flush=True)
 
     start_wall = time.perf_counter_ns()
     start_cpu = time.process_time_ns()
@@ -56,7 +56,7 @@ def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
         result.cpu_time = (end_cpu - start_cpu) / 1_000_000_000
         result.memory = end_memory - start_memory
 
-        print(f"\nbefore end: os={os.getpid()} psutil={process.pid}", flush=True)
+        # print(f"\nbefore end: os={os.getpid()} psutil={process.pid}", flush=True)
         result.voluntary_switches = end_context.voluntary - start_context.voluntary
         result.involuntary_switches = end_context.involuntary - start_context.involuntary
 
