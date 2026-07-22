@@ -58,9 +58,9 @@ class Cpu_1:
         with benchmark_scope("blocking_cpu") as result:
             fibonacci(35, id=1)
             fibonacci(35, id=2)
-            fibonacci(35, id=3)
-            fibonacci(35, id=4)
-            fibonacci(35, id=5)
+            # fibonacci(35, id=3)
+            # fibonacci(35, id=4)
+            # fibonacci(35, id=5)
 
         # resp.media = {
         #     "status": "ok",
@@ -76,9 +76,9 @@ class Cpu_2:
         jobs: list[Greenlet[..., None]] = [
             gevent.spawn(fibonacci, n=35, id=1),
             gevent.spawn(fibonacci, n=35, id=2),
-            gevent.spawn(fibonacci, n=35, id=3),
-            gevent.spawn(fibonacci, n=35, id=4),
-            gevent.spawn(fibonacci, n=35, id=5),
+            # gevent.spawn(fibonacci, n=35, id=3),
+            # gevent.spawn(fibonacci, n=35, id=4),
+            # gevent.spawn(fibonacci, n=35, id=5),
         ]
 
         gevent.joinall(jobs)
