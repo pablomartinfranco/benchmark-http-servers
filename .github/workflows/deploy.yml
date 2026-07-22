@@ -32,6 +32,7 @@ jobs:
       - name: Sync files
         run: |
           rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes" \
             --exclude ".git" \
             --exclude ".github" \
             --exclude "__pycache__" \
@@ -47,7 +48,10 @@ jobs:
 
       - name: Run deploy script
         run: |
-          ssh ${{ secrets.SSH_USER }}@alphalab.com.ar << 'EOF'
+          ssh \
+            -i ~/.ssh/id_rsa \
+            -o IdentitiesOnly=yes \
+            ${{ secrets.SSH_USER }}@alphalab.com.ar << 'EOF'
             cd ~/web/0a/wsgi-falcon-gevent.0a.com.ar
             chmod +x deploy.sh
             ./deploy.sh
