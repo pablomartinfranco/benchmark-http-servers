@@ -16,10 +16,6 @@ import psutil
 # Do not start/stop tracemalloc on every request.
 tracemalloc.start()
 
-process = psutil.Process(os.getpid())
-
-print(f"\nos pid={os.getpid()} psutil pid={process.pid}", flush=True)
-
 
 @dataclass(slots=True)
 class BenchmarkResult:
@@ -35,6 +31,9 @@ class BenchmarkResult:
 
 @contextmanager
 def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
+
+    process = psutil.Process(os.getpid())
+    print(f"\nos pid={os.getpid()} psutil pid={process.pid}", flush=True)
 
     start_wall = time.perf_counter_ns()
     start_cpu = time.process_time_ns()
