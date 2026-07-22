@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import time
 import tracemalloc
 from collections.abc import Callable, Generator
@@ -15,7 +16,7 @@ import psutil
 # Do not start/stop tracemalloc on every request.
 tracemalloc.start()
 
-process = psutil.Process()
+process = psutil.Process(os.getpid())
 
 
 # @dataclass(slots=True)

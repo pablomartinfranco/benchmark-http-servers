@@ -56,11 +56,11 @@ class Cpu_1:
     def on_get(self, req: Request, resp: Response) -> None:
 
         with benchmark_scope("cpu_1_inner") as result:
-            fibonacci(30, id=1)
-            fibonacci(30, id=2)
-            fibonacci(30, id=3)
-            fibonacci(30, id=4)
-            fibonacci(30, id=5)
+            fibonacci(32, id=1)
+            fibonacci(32, id=2)
+            fibonacci(32, id=3)
+            fibonacci(32, id=4)
+            fibonacci(32, id=5)
 
         resp.media = {
             "status": "ok",
@@ -74,11 +74,11 @@ class Cpu_2:
 
         with benchmark_scope("cpu_2_inner") as result:
             jobs: list[Greenlet[..., int]] = [
-                gevent.spawn(fibonacci, n=30, id=1),
-                gevent.spawn(fibonacci, n=30, id=2),
-                gevent.spawn(fibonacci, n=30, id=3),
-                gevent.spawn(fibonacci, n=30, id=4),
-                gevent.spawn(fibonacci, n=30, id=5),
+                gevent.spawn(fibonacci, n=32, id=1),
+                gevent.spawn(fibonacci, n=32, id=2),
+                gevent.spawn(fibonacci, n=32, id=3),
+                gevent.spawn(fibonacci, n=32, id=4),
+                gevent.spawn(fibonacci, n=32, id=5),
             ]
 
             gevent.joinall(jobs)
