@@ -1,17 +1,19 @@
 # ruff: noqa: E402
 from gevent import monkey
 
-from shared.utils import benchmark, blocking_io, fibonacci, gen_items, hash
-
 monkey.patch_all()
 
+import threading
 import time
 
 import falcon
 import gevent
 import requests
 from falcon import Request, Response
+from gevent import config, get_hub
 from gevent.greenlet import Greenlet
+
+from shared.utils import benchmark, blocking_io, fibonacci, gen_items, hash
 
 
 class Plain:
@@ -202,12 +204,19 @@ class HTTPCall:
 
         start = time.perf_counter()
 
-        r = requests.get("https://httpbin.org/get")
+        r = requests.get("https://httpbin.org/get", timeout=10)
 
         elapsed = time.perf_counter() - start
 
-        resp.media = r.json()
-        resp.media["elapsed"] = f"{elapsed:.6f}s"
+        is_json = r.headers.get("content-type", "").startswith("application/json")
+
+        # resp.media = r.json()
+        resp.media = {
+            "status": r.status_code,
+            "content_type": r.headers.get("content-type"),
+            "body": r.json() if is_json else r.text,
+            "elapsed": f"{elapsed:.6f}s",
+        }
 
 
 class Echo:
@@ -256,7 +265,7 @@ class Hash_2:
 
         data = b"x" * 10_000_000
 
-        jobs: list[Greenlet[..., requests.Response]] = [
+        jobs: list[Greenlet[..., None]] = [
             gevent.spawn(hash, data, id=1),
             gevent.spawn(hash, data, id=2),
             gevent.spawn(hash, data, id=3),
@@ -274,6 +283,72 @@ class Hash_2:
         }
 
 
+class GeventInfo:
+    def on_get(self, req: Request, resp: Response) -> None:
+
+        hub = get_hub()
+        current = gevent.getcurrent()
+
+        resp.media = {
+            "gevent": {
+                "version": gevent.__version__,
+                "hub": {
+                    "type": type(hub).__name__,
+                    "loop": {
+                        "type": type(hub.loop).__name__,
+                        "default": hub.loop.default,
+                    },
+                },
+                "current": {
+                    "type": type(current).__name__,
+                    "repr": repr(current),
+                    "is_main": current is gevent.get_hub().parent,
+                },
+                "config": {
+                    "monitor_thread": config.monitor_thread,
+                },
+            },
+            "monkey_patch": {
+                "socket": monkey.is_module_patched("socket"),
+                "ssl": monkey.is_module_patched("ssl"),
+                "threading": monkey.is_module_patched("threading"),
+                "select": monkey.is_module_patched("select"),
+                "time": monkey.is_module_patched("time"),
+                "subprocess": monkey.is_module_patched("subprocess"),
+            },
+            "python": {
+                "thread": {
+                    "name": threading.current_thread().name,
+                    "ident": threading.current_thread().ident,
+                }
+            },
+        }
+
+
+class GeventYield:
+    def on_get(self, req: Request, resp: Response) -> None:
+
+        events: list[str] = []
+
+        def worker(id: int) -> None:
+            events.append(f"{id}-start")
+            gevent.sleep(0)
+            events.append(f"{id}-end")
+
+        jobs: list[Greenlet[..., None]] = [
+            gevent.spawn(worker, 1),
+            gevent.spawn(worker, 2),
+            gevent.spawn(worker, 3),
+        ]
+
+        gevent.joinall(jobs)
+
+        resp.media = {
+            "events": events,
+            "greenlets": len(jobs),
+        }
+
+
 app = falcon.App()
 
 
@@ -287,6 +362,8 @@ app.add_route("/io-2", IO_2())
 app.add_route("/http-1", HTTP_1())
 app.add_route("/http-2", HTTP_2())
 app.add_route("/http-call", HTTPCall())
-app.add_route("/post/echo", Echo())
+app.add_route("/echo", Echo())
 app.add_route("/hash-1", Hash_1())
 app.add_route("/hash-2", Hash_2())
+app.add_route("/gevent-info", GeventInfo())
+app.add_route("/gevent-yield", GeventYield())
