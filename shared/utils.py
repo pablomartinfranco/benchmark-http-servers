@@ -28,9 +28,7 @@ class BenchmarkResult:
 
 
 @contextmanager
-def benchmark_scope(
-    name: str = "benchmark",
-) -> Generator[BenchmarkResult, None, None]:
+def benchmark_scope(name: str = "benchmark") -> Generator[BenchmarkResult, None, None]:
 
     result = BenchmarkResult()
 
@@ -82,8 +80,24 @@ def benchmark(
         @wraps(target)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
 
-            with benchmark_scope(name or target.__name__):
-                return target(*args, **kwargs)
+            with benchmark_scope(name or target.__name__) as result:
+                response = target(*args, **kwargs)
+
+            # Falcon responder signature:
+            # self, req, resp
+            if len(args) >= 3:
+                resp = args[2]
+
+                resp.context["benchmark"] = {
+                    "name": name or target.__name__,
+                    "elapsed": result.elapsed,
+                    "cpu_time": result.cpu_time,
+                    "memory": result.memory,
+                    "voluntary_switches": result.voluntary_switches,
+                    "involuntary_switches": result.involuntary_switches,
+                }
+
+            return response
 
         return wrapper
 

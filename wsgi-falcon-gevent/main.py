@@ -17,7 +17,7 @@ from shared.utils import benchmark, blocking_io, fibonacci, gen_items, hash
 
 
 class Plain:
-    @benchmark
+    @benchmark(name="plain")
     def on_get(self, req: Request, resp: Response) -> None:
         resp.media = {
             "status": "ok",
@@ -25,7 +25,7 @@ class Plain:
 
 
 class Json_1:
-    @benchmark
+    @benchmark(name="blocking_json")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -45,7 +45,7 @@ class Json_1:
 
 
 class Json_2:
-    @benchmark
+    @benchmark(name="non_blocking_json")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -69,7 +69,7 @@ class Json_2:
 
 
 class Cpu_1:
-    @benchmark
+    @benchmark(name="blocking_cpu")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -88,7 +88,7 @@ class Cpu_1:
 
 
 class Cpu_2:
-    @benchmark
+    @benchmark(name="non_blocking_cpu")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -111,10 +111,10 @@ class Cpu_2:
 
 
 class IO_1:
-    @benchmark
+    @benchmark(name="blocking_io")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        start = time.perf_counter()
+        # start = time.perf_counter()
 
         blocking_io(id=1)
         blocking_io(id=2)
@@ -122,15 +122,16 @@ class IO_1:
         blocking_io(id=4)
         blocking_io(id=5)
 
-        elapsed = time.perf_counter() - start
+        # elapsed = time.perf_counter() - start
 
         resp.media = {
-            "elapsed": f"{elapsed:.6f}s",
+            # "elapsed": f"{elapsed:.6f}s",
+            "benchmark": resp.context["benchmark"],
         }
 
 
 class IO_2:
-    @benchmark
+    @benchmark(name="non_blocking_io")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -153,7 +154,7 @@ class IO_2:
 
 
 class HTTP_1:
-    @benchmark
+    @benchmark(name="blocking_http")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -175,7 +176,7 @@ class HTTP_1:
 
 
 class HTTP_2:
-    @benchmark
+    @benchmark(name="non_blocking_http")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -199,7 +200,7 @@ class HTTP_2:
 
 
 class HTTPCall:
-    @benchmark
+    @benchmark(name="http_call")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -220,7 +221,7 @@ class HTTPCall:
 
 
 class Echo:
-    @benchmark
+    @benchmark(name="post_echo")
     def on_post(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -236,7 +237,7 @@ class Echo:
 
 
 class Hash_1:
-    @benchmark
+    @benchmark(name="blocking_hash")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
@@ -258,7 +259,7 @@ class Hash_1:
 
 
 class Hash_2:
-    @benchmark
+    @benchmark(name="non_blocking_hash")
     def on_get(self, req: Request, resp: Response) -> None:
 
         start = time.perf_counter()
