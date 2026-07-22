@@ -10,7 +10,6 @@ from functools import wraps
 from typing import Any
 
 import psutil
-from falcon import Response
 
 # Initialize once when the application starts.
 # Do not start/stop tracemalloc on every request.
@@ -32,13 +31,15 @@ class BenchmarkResult:
 
 
 @contextmanager
-def benchmark_scope(name: str, result: BenchmarkResult) -> Generator[BenchmarkResult, None, None]:
+def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
 
     start_wall = time.perf_counter_ns()
     start_cpu = time.process_time_ns()
 
     start_memory, _ = tracemalloc.get_traced_memory()
     start_context = process.num_ctx_switches()
+
+    result = BenchmarkResult()
 
     try:
         yield result
@@ -75,13 +76,7 @@ def benchmark(
         @wraps(target)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
 
-            result = BenchmarkResult()
-
-            if len(args) >= 3:
-                resp: Response = args[2]
-                resp.context.benchmark = result
-
-            with benchmark_scope(name or target.__name__, result):
+            with benchmark_scope(name or target.__name__):
                 return target(*args, **kwargs)
 
         return wrapper

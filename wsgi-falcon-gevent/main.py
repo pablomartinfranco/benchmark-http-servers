@@ -5,8 +5,6 @@ from gevent import monkey
 monkey.patch_all()
 
 import threading
-import time
-from dataclasses import asdict
 
 import falcon
 import gevent
@@ -15,22 +13,18 @@ from falcon import Request, Response
 from gevent import config, get_hub
 from gevent.greenlet import Greenlet
 
-from shared.utils import benchmark, blocking_io, fibonacci, gen_items, hash
+from shared.utils import benchmark, benchmark_scope, blocking_io, fibonacci, gen_items, hash
 
 
 class Plain:
     @benchmark(name="plain")
     def on_get(self, req: Request, resp: Response) -> None:
-        resp.media = {
-            "status": "ok",
-        }
+        resp.media = {"status": "ok"}
 
 
 class Json_1:
     @benchmark(name="blocking_json")
     def on_get(self, req: Request, resp: Response) -> None:
-
-        start = time.perf_counter()
 
         items_1 = gen_items(100, id=1)
         items_2 = gen_items(100, id=2)
@@ -38,19 +32,12 @@ class Json_1:
         items_4 = gen_items(100, id=4)
         items_5 = gen_items(100, id=5)
 
-        elapsed = time.perf_counter() - start
-
-        resp.media = {
-            "items": list(items_1 + items_2 + items_3 + items_4 + items_5),
-            "elapsed": f"{elapsed:.6f}s",
-        }
+        resp.media = {"items": list(items_1 + items_2 + items_3 + items_4 + items_5)}
 
 
 class Json_2:
     @benchmark(name="non_blocking_json")
     def on_get(self, req: Request, resp: Response) -> None:
-
-        start = time.perf_counter()
 
         jobs: list[Greenlet[..., None]] = [
             gevent.spawn(gen_items, n=100, id=1),
@@ -62,38 +49,29 @@ class Json_2:
 
         gevent.joinall(jobs)
 
-        elapsed = time.perf_counter() - start
-
-        resp.media = {
-            "items": [job.get() for job in jobs],
-            "elapsed": f"{elapsed:.6f}s",
-        }
+        resp.media = {"items": [job.get() for job in jobs]}
 
 
 class Cpu_1:
     @benchmark(name="blocking_cpu")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        start = time.perf_counter()
-
-        fibonacci(35, id=1)
-        fibonacci(35, id=2)
-        fibonacci(35, id=3)
-        fibonacci(35, id=4)
-        fibonacci(35, id=5)
-
-        elapsed = time.perf_counter() - start
+        with benchmark_scope("blocking_cpu") as result:
+            fibonacci(35, id=1)
+            fibonacci(35, id=2)
+            fibonacci(35, id=3)
+            fibonacci(35, id=4)
+            fibonacci(35, id=5)
 
         resp.media = {
-            "elapsed": f"{elapsed:.6f}s",
+            "status": "ok",
+            **result.to_dict(),
         }
 
 
 class Cpu_2:
     @benchmark(name="non_blocking_cpu")
     def on_get(self, req: Request, resp: Response) -> None:
-
-        start = time.perf_counter()
 
         jobs: list[Greenlet[..., None]] = [
             gevent.spawn(fibonacci, n=35, id=1),
@@ -105,18 +83,12 @@ class Cpu_2:
 
         gevent.joinall(jobs)
 
-        elapsed = time.perf_counter() - start
-
-        resp.media = {
-            "elapsed": f"{elapsed:.6f}s",
-        }
+        resp.media = {"status": "ok"}
 
 
 class IO_1:
     @benchmark(name="blocking_io")
     def on_get(self, req: Request, resp: Response) -> None:
-
-        # start = time.perf_counter()
 
         blocking_io(id=1)
         blocking_io(id=2)
@@ -124,19 +96,12 @@ class IO_1:
         blocking_io(id=4)
         blocking_io(id=5)
 
-        # elapsed = time.perf_counter() - start
-
-        resp.media = {
-            # "elapsed": f"{elapsed:.6f}s",
-            "benchmark": asdict(resp.context.benchmark),
-        }
+        resp.media = {"status": "ok"}
 
 
 class IO_2:
     @benchmark(name="non_blocking_io")
     def on_get(self, req: Request, resp: Response) -> None:
-
-        start = time.perf_counter()
 
         jobs: list[Greenlet[..., None]] = [
             gevent.spawn(blocking_io, id=1),
@@ -148,18 +113,12 @@ class IO_2:
 
         gevent.joinall(jobs)
 
-        elapsed = time.perf_counter() - start
-
-        resp.media = {
-            "elapsed": f"{elapsed:.6f}s",
-        }
+        resp.media = {"status": "ok"}
 
 
 class HTTP_1:
     @benchmark(name="blocking_http")
     def on_get(self, req: Request, resp: Response) -> None:
-
-        start = time.perf_counter()
 
         resp_1 = requests.get("https://httpbin.org/delay/1")
         resp_2 = requests.get("https://httpbin.org/delay/1")
@@ -169,19 +128,12 @@ class HTTP_1:
 
         responses = [resp_1, resp_2, resp_3, resp_4, resp_5]
 
-        elapsed = time.perf_counter() - start
-
-        resp.media = {
-            "responses": [resp.status_code for resp in responses],
-            "elapsed": f"{elapsed:.6f}s",
-        }
+        resp.media = {"responses": [resp.status_code for resp in responses]}
 
 
 class HTTP_2:
     @benchmark(name="non_blocking_http")
     def on_get(self, req: Request, resp: Response) -> None:
-
-        start = time.perf_counter()
 
         jobs: list[Greenlet[..., requests.Response]] = [
             gevent.spawn(requests.get, "https://httpbin.org/delay/1"),
@@ -193,23 +145,14 @@ class HTTP_2:
 
         gevent.joinall(jobs)
 
-        elapsed = time.perf_counter() - start
-
-        resp.media = {
-            "responses": [job.get().status_code for job in jobs],
-            "elapsed": f"{elapsed:.6f}s",
-        }
+        resp.media = {"responses": [job.get().status_code for job in jobs]}
 
 
 class HTTPCall:
     @benchmark(name="http_call")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        start = time.perf_counter()
-
         r = requests.get("https://httpbin.org/get", timeout=10)
-
-        elapsed = time.perf_counter() - start
 
         is_json = r.headers.get("content-type", "").startswith("application/json")
 
@@ -218,7 +161,6 @@ class HTTPCall:
             "status": r.status_code,
             "content_type": r.headers.get("content-type"),
             "body": r.json() if is_json else r.text,
-            "elapsed": f"{elapsed:.6f}s",
         }
 
 
@@ -226,23 +168,14 @@ class Echo:
     @benchmark(name="post_echo")
     def on_post(self, req: Request, resp: Response) -> None:
 
-        start = time.perf_counter()
-
         data = req.media
 
-        elapsed = time.perf_counter() - start
-
-        resp.media = {
-            "received": data,
-            "elapsed": f"{elapsed:.6f}s",
-        }
+        resp.media = {"received": data}
 
 
 class Hash_1:
     @benchmark(name="blocking_hash")
     def on_get(self, req: Request, resp: Response) -> None:
-
-        start = time.perf_counter()
 
         data = b"x" * 10_000_000
 
@@ -252,19 +185,12 @@ class Hash_1:
         dig_4 = hash(data, id=4)
         dig_5 = hash(data, id=5)
 
-        elapsed = time.perf_counter() - start
-
-        resp.media = {
-            "sha256": [dig_1, dig_2, dig_3, dig_4, dig_5],
-            "elapsed": f"{elapsed:.6f}s",
-        }
+        resp.media = {"sha256": [dig_1, dig_2, dig_3, dig_4, dig_5]}
 
 
 class Hash_2:
     @benchmark(name="non_blocking_hash")
     def on_get(self, req: Request, resp: Response) -> None:
-
-        start = time.perf_counter()
 
         data = b"x" * 10_000_000
 
@@ -278,12 +204,7 @@ class Hash_2:
 
         gevent.joinall(jobs)
 
-        elapsed = time.perf_counter() - start
-
-        resp.media = {
-            "sha256": [job.get() for job in jobs],
-            "elapsed": f"{elapsed:.6f}s",
-        }
+        resp.media = {"sha256": [job.get() for job in jobs]}
 
 
 class GeventInfo:
