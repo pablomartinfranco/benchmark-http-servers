@@ -18,7 +18,7 @@ tracemalloc.start()
 
 process = psutil.Process(os.getpid())
 
-print(f"os pid={os.getpid()} psutil pid={process.pid}", flush=True)
+print(f"\nos pid={os.getpid()} psutil pid={process.pid}", flush=True)
 
 
 @dataclass(slots=True)
@@ -57,7 +57,7 @@ def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
         result.cpu_time = (end_cpu - start_cpu) / 1_000_000_000
         result.memory = end_memory - start_memory
 
-        print(f"before end: os={os.getpid()} psutil={process.pid}", flush=True)
+        print(f"\nbefore end: os={os.getpid()} psutil={process.pid}", flush=True)
         result.voluntary_switches = end_context.voluntary - start_context.voluntary
         result.involuntary_switches = end_context.involuntary - start_context.involuntary
 
