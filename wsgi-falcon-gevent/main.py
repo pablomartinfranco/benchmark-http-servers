@@ -18,36 +18,48 @@ from shared.utils import benchmark, benchmark_scope, blocking_io, fibonacci, gen
 class Plain:
     @benchmark(name="plain_outer")
     def on_get(self, req: Request, resp: Response) -> None:
-        resp.media = {"status": "ok"}
+        with benchmark_scope("cpu_1_inner") as result:
+            ...
+        resp.media = {
+            "data": "ok",
+            **result.to_dict(),
+        }
 
 
 class Json_1:
     @benchmark(name="json_1_outer")
     def on_get(self, req: Request, resp: Response) -> None:
+        with benchmark_scope("cpu_1_inner") as result:
+            items_1 = gen_items(100, id=1)
+            items_2 = gen_items(100, id=2)
+            items_3 = gen_items(100, id=3)
+            items_4 = gen_items(100, id=4)
+            items_5 = gen_items(100, id=5)
 
-        items_1 = gen_items(100, id=1)
-        items_2 = gen_items(100, id=2)
-        items_3 = gen_items(100, id=3)
-        items_4 = gen_items(100, id=4)
-        items_5 = gen_items(100, id=5)
-
-        resp.media = {"items": list(items_1 + items_2 + items_3 + items_4 + items_5)}
+        resp.media = {
+            "data": list(items_1 + items_2 + items_3 + items_4 + items_5),
+            **result.to_dict(),
+        }
 
 
 class Json_2:
     @benchmark(name="json_2_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        jobs: list[Greenlet[..., None]] = [
-            gevent.spawn(gen_items, n=100, id=1),
-            gevent.spawn(gen_items, n=100, id=2),
-            gevent.spawn(gen_items, n=100, id=3),
-            gevent.spawn(gen_items, n=100, id=4),
-            gevent.spawn(gen_items, n=100, id=5),
-        ]
-        gevent.joinall(jobs)
+        with benchmark_scope("cpu_1_inner") as result:
+            jobs: list[Greenlet[..., None]] = [
+                gevent.spawn(gen_items, n=100, id=1),
+                gevent.spawn(gen_items, n=100, id=2),
+                gevent.spawn(gen_items, n=100, id=3),
+                gevent.spawn(gen_items, n=100, id=4),
+                gevent.spawn(gen_items, n=100, id=5),
+            ]
+            gevent.joinall(jobs)
 
-        resp.media = {"items": [job.get() for job in jobs]}
+        resp.media = {
+            "data": [job.get() for job in jobs],
+            **result.to_dict(),
+        }
 
 
 class Cpu_1:
@@ -62,7 +74,7 @@ class Cpu_1:
             fibonacci(31, id=5)
 
         resp.media = {
-            "status": "ok",
+            "data": "ok",
             **result.to_dict(),
         }
 
@@ -82,7 +94,7 @@ class Cpu_2:
             gevent.joinall(jobs)
 
         resp.media = {
-            "status": "ok",
+            "data": "ok",
             **result.to_dict(),
         }
 
@@ -99,7 +111,7 @@ class IO_1:
             blocking_io(id=5)
 
         resp.media = {
-            "status": "ok",
+            "data": "ok",
             **result.to_dict(),
         }
 
@@ -119,7 +131,7 @@ class IO_2:
             gevent.joinall(jobs)
 
         resp.media = {
-            "status": "ok",
+            "data": "ok",
             **result.to_dict(),
         }
 
@@ -137,7 +149,7 @@ class HTTP_1:
             responses = [resp_1, resp_2, resp_3, resp_4, resp_5]
 
         resp.media = {
-            "responses": [resp.status_code for resp in responses],
+            "data": [resp.status_code for resp in responses],
             **result.to_dict(),
         }
 
@@ -157,7 +169,7 @@ class HTTP_2:
             gevent.joinall(jobs)
 
         resp.media = {
-            "responses": [job.get().status_code for job in jobs],
+            "data": [job.get().status_code for job in jobs],
             **result.to_dict(),
         }
 
@@ -166,15 +178,17 @@ class HTTPCall:
     @benchmark(name="http_call_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        r = requests.get("https://httpbin.org/get", timeout=10)
+        with benchmark_scope("http_call_inner") as result:
+            r = requests.get("https://httpbin.org/get", timeout=10)
 
-        is_json = r.headers.get("content-type", "").startswith("application/json")
+            is_json = r.headers.get("content-type", "").startswith("application/json")
 
         # resp.media = r.json()
         resp.media = {
             "status": r.status_code,
             "content_type": r.headers.get("content-type"),
             "body": r.json() if is_json else r.text,
+            **result.to_dict(),
         }
 
 
@@ -182,9 +196,13 @@ class Echo:
     @benchmark(name="echo_outer")
     def on_post(self, req: Request, resp: Response) -> None:
 
-        data = req.media
+        with benchmark_scope("echo_inner") as result:
+            data = req.media
 
-        resp.media = {"received": data}
+        resp.media = {
+            "data": data,
+            **result.to_dict(),
+        }
 
 
 class Hash_1:
@@ -269,9 +287,10 @@ class GeventInfo:
 
 
 class GeventYield:
+    @benchmark(name="gevent_yield_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        with benchmark_scope("hash_1_inner") as result:
+        with benchmark_scope("gevent_yield_inner") as result:
             events: list[str] = []
 
             def worker(id: int) -> None:
