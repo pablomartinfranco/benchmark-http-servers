@@ -28,6 +28,10 @@ dependencies = [
 ]
 
 [dependency-groups]
+benchmark = [
+    "locust>=2.46.2",
+    "molotov>=2.6",
+]
 dev = [
     "mypy>=1.14.1",
     "pytest>=8.3.5",

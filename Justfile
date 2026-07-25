@@ -47,6 +47,13 @@ check:
     just lint
     just test
 
+locust:
+    uv run locust -f locustfile.py --headless -u 100 -r 10 --run-time 1m
+
+molotov:
+    uv run molotov molotovfile.py --workers 100 --duration 60
+    # uv run molotov benchmark.py
+
 # Python shell
 shell:
     uv run python

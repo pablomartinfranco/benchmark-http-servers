@@ -18,11 +18,11 @@ from shared.utils import benchmark, benchmark_scope, blocking_io, fibonacci, gen
 class Plain:
     @benchmark(name="plain_outer")
     def on_get(self, req: Request, resp: Response) -> None:
-        with benchmark_scope("cpu_1_inner") as result:
-            ...
+        # with benchmark_scope("cpu_1_inner") as result:
+        # ...
         resp.media = {
             "data": "ok",
-            **result.to_dict(),
+            # **result.to_dict(),
         }
 
 
