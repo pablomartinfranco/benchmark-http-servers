@@ -57,6 +57,7 @@ jobs:
             -o IdentitiesOnly=yes \
             ${{ secrets.SSH_USER }}@alphalab.com.ar << 'EOF'
             cd ~/web/0a/wsgi-falcon-gevent.0a.com.ar
+            chmod +x logs.sh
             chmod +x deploy.sh
             ./deploy.sh
           EOF
