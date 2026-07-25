@@ -128,7 +128,7 @@ class HTTP_1:
     @benchmark(name="http_1_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        with benchmark_scope("io_2_inner") as result:
+        with benchmark_scope("http_1_inner") as result:
             resp_1 = requests.get("https://httpbin.org/delay/1")
             resp_2 = requests.get("https://httpbin.org/delay/1")
             resp_3 = requests.get("https://httpbin.org/delay/1")
@@ -209,7 +209,7 @@ class Hash_2:
     @benchmark(name="hash_2_outer")
     def on_get(self, req: Request, resp: Response) -> None:
 
-        with benchmark_scope("hash_1_inner") as result:
+        with benchmark_scope("hash_2_inner") as result:
             data = b"x" * 10_000_000
             jobs: list[Greenlet[..., None]] = [
                 gevent.spawn(hash, data, id=1),
