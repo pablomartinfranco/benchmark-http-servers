@@ -54,6 +54,9 @@ molotov:
     uv run molotov molotovfile.py --workers 100 --duration 60
     # uv run molotov benchmark.py
 
+oha:
+    .\oha.exe -z 30s -c 100 https://wsgi-falcon-gevent.0a.com.ar/plain
+
 # Python shell
 shell:
     uv run python

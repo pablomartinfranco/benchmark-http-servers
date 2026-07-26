@@ -1,16 +1,30 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
+import queue
 import time
 import tracemalloc
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from functools import wraps
+from logging.handlers import QueueHandler, QueueListener
 from typing import Any
 
 import psutil
+
+log_queue: queue.SimpleQueue[logging.LogRecord] = queue.SimpleQueue()
+
+file_handler = logging.FileHandler("benchmark.log")
+
+listener = QueueListener(log_queue, file_handler)
+listener.start()
+
+logger = logging.getLogger("benchmark")
+logger.setLevel(logging.INFO)
+logger.addHandler(QueueHandler(log_queue))
 
 # Initialize once when the application starts.
 # Do not start/stop tracemalloc on every request.
@@ -60,14 +74,24 @@ def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
         result.voluntary_switches = end_context.voluntary - start_context.voluntary
         result.involuntary_switches = end_context.involuntary - start_context.involuntary
 
-        print(
-            f"\n{name}:\n"
-            f"  wall={result.elapsed:.6f}s\n"
-            f"  cpu ={result.cpu_time:.6f}s\n"
-            f"  mem ={result.memory / 1024:.2f}KB\n"
-            f"  ctx ={result.voluntary_switches} voluntary "
-            f"{result.involuntary_switches} involuntary",
-            flush=True,
+        # print(
+        #     f"\n{name}:\n"
+        #     f"  wall={result.elapsed:.6f}s\n"
+        #     f"  cpu ={result.cpu_time:.6f}s\n"
+        #     f"  mem ={result.memory / 1024:.2f}KB\n"
+        #     f"  ctx ={result.voluntary_switches} voluntary "
+        #     f"{result.involuntary_switches} involuntary",
+        #     flush=True,
+        # )
+
+        logger.info(
+            "%s wall=%.6f cpu=%.6f mem=%d ctx=%d/%d",
+            name,
+            result.elapsed,
+            result.cpu_time,
+            result.memory,
+            result.voluntary_switches,
+            result.involuntary_switches,
         )
 
 
