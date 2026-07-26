@@ -39,6 +39,7 @@ class BenchmarkResult:
     elapsed: float = 0.0
     cpu_time: float = 0.0
     memory: int = 0
+    peak_memory: int = 0
     voluntary_switches: int = 0
     involuntary_switches: int = 0
 
@@ -56,6 +57,8 @@ def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
     start_cpu = time.process_time_ns()
 
     start_memory, _ = tracemalloc.get_traced_memory()
+    tracemalloc.reset_peak()
+
     start_context = process.num_ctx_switches()
 
     result = BenchmarkResult()
@@ -66,12 +69,13 @@ def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
     finally:
         end_wall = time.perf_counter_ns()
         end_cpu = time.process_time_ns()
-        end_memory, _ = tracemalloc.get_traced_memory()
+        end_memory, peak_memory = tracemalloc.get_traced_memory()
         end_context = process.num_ctx_switches()
 
         result.elapsed = (end_wall - start_wall) / 1_000_000_000
         result.cpu_time = (end_cpu - start_cpu) / 1_000_000_000
         result.memory = end_memory - start_memory
+        result.peak_memory = peak_memory - start_memory
 
         # print(f"\nbefore end: os={os.getpid()} psutil={process.pid}", flush=True)
         result.voluntary_switches = end_context.voluntary - start_context.voluntary
@@ -87,12 +91,23 @@ def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
         #     flush=True,
         # )
 
+        # logger.info(
+        #     "%s wall=%.6f cpu=%.6f mem=%d ctx=%d/%d",
+        #     name,
+        #     result.elapsed,
+        #     result.cpu_time,
+        #     result.memory,
+        #     result.voluntary_switches,
+        #     result.involuntary_switches,
+        # )
+
         logger.info(
-            "%s wall=%.6f cpu=%.6f mem=%d ctx=%d/%d",
+            "%s wall=%.6fs cpu=%.6fs mem=%+.2fKiB pkm=%+.2fKiB ctx=%d/%d",
             name,
             result.elapsed,
             result.cpu_time,
-            result.memory,
+            result.memory / 1024,
+            result.peak_memory / 1024,
             result.voluntary_switches,
             result.involuntary_switches,
         )

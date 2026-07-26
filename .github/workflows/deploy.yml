@@ -42,7 +42,7 @@ jobs:
             --exclude ".env" \
             --exclude "env" \
             --exclude "tmp" \
-            --exclude "stderr.log" \
+            --exclude "*.log" \
             ./wsgi-falcon-gevent/ \
             ${{ secrets.SSH_USER }}@alphalab.com.ar:~/web/0a/wsgi-falcon-gevent.0a.com.ar/
 
