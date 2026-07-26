@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import atexit
 import hashlib
 import logging
 import os
@@ -21,6 +22,8 @@ file_handler = logging.FileHandler("benchmark.log")
 
 listener = QueueListener(log_queue, file_handler)
 listener.start()
+
+atexit.register(listener.stop)
 
 logger = logging.getLogger("benchmark")
 logger.setLevel(logging.INFO)
@@ -113,6 +116,18 @@ def benchmark(
         return decorator(func)
 
     return decorator
+
+
+def flush_log_queue() -> None:
+    while True:
+        try:
+            record = log_queue.get_nowait()
+        except queue.Empty:
+            break
+        else:
+            file_handler.handle(record)
+
+    file_handler.flush()
 
 
 def blocking_io(id: int | None = None) -> None:
