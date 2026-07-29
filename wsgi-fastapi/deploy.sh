@@ -20,7 +20,9 @@ rm -rf "$VENV/lib/python$PYTHON_VERSION/site-packages"
 
 source "$VENV/bin/activate"
 
-python -m pip install --upgrade pip
+python -m ensurepip --upgrade
+
+# python -m pip install --upgrade pip
 
 # python -m pip list --format=freeze \
 #   | grep -vE '^(pip|setuptools|wheel)==' || true \
