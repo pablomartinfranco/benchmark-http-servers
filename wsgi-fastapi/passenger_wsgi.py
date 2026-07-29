@@ -1,6 +1,15 @@
+from a2wsgi import ASGIMiddleware
 from fastapi import FastAPI
 
-application = FastAPI()  # type: ignore
+app = FastAPI()
+
+
+@app.get("/")
+async def root():
+    return {"status": "ok"}
+
+
+application = ASGIMiddleware(app)  # type: ignore
 
 
 # from fastapi import FastAPI
