@@ -1,6 +1,6 @@
 a2wsgi
 uvicorn
 fastapi
-httpx[http2]
-requests
 psutil
+requests
+httpx[http2]

@@ -1,21 +1,7 @@
-# def application(environ, start_response):  # type: ignore
-#     start_response("200 OK", [("Content-Type", "text/plain")])
-#     return [b"Hello"]
-
-
-# from fastapi import FastAPI
-
-# app = FastAPI()
-
-
-# @app.get("/")
-# async def root():
-#     return {"ok": True}
-
-
 from __future__ import annotations
 
 import asyncio
+import sys
 import threading
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from contextlib import AsyncExitStack, asynccontextmanager
@@ -28,6 +14,8 @@ from fastapi import Depends, FastAPI, Request
 
 from shared.async_utils import async_blocking_io, async_fibonacci, async_gen_items, async_hash
 from shared.utils import benchmark, benchmark_scope, blocking_io, fibonacci, gen_items, hash
+
+sys.stdout = sys.stderr
 
 
 @dataclass(frozen=True, slots=True)
