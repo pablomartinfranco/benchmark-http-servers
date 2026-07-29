@@ -1,16 +1,24 @@
+from a2wsgi import ASGIMiddleware
 from fastapi import FastAPI
 
 app = FastAPI()
 
-
-@app.get("/")
-async def root():
-    return {"ok": True}
+application = ASGIMiddleware(app)  # type: ignore
 
 
-def application(environ, start_response):  # type: ignore
-    start_response("200 OK", [("Content-Type", "text/plain")])
-    return [b"Hello"]
+# from fastapi import FastAPI
+
+# app = FastAPI()
+
+
+# @app.get("/")
+# async def root():
+#     return {"ok": True}
+
+
+# def application(environ, start_response):  # type: ignore
+#     start_response("200 OK", [("Content-Type", "text/plain")])
+#     return [b"Hello"]
 
 
 # def application(environ, start_response):  # type: ignore
