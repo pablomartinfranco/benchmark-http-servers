@@ -1,11 +1,20 @@
-import sys
+def application(environ, start_response):  # type: ignore
+    start_response(
+        "200 OK",
+        [("Content-Type", "text/plain")],
+    )
+    return [b"Hello"]
 
-from a2wsgi import ASGIMiddleware
-from main import app
 
-sys.stdout = sys.stderr
+# import sys
 
-application = ASGIMiddleware(app)  # type: ignore
+# from a2wsgi import ASGIMiddleware
+# from main import app
+
+# sys.stdout = sys.stderr
+
+# application = ASGIMiddleware(app)  # type: ignore
+
 
 # import sys
 # from typing import cast
