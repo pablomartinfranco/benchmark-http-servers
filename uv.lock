@@ -436,7 +436,7 @@ dependencies = [
     { name = "fastapi", extra = ["all"] },
     { name = "gevent" },
     { name = "gunicorn" },
-    { name = "httpx" },
+    { name = "httpx", extra = ["http2"] },
     { name = "hypercorn" },
     { name = "litestar", extra = ["pydantic", "standard"] },
     { name = "orjson" },
@@ -474,7 +474,7 @@ requires-dist = [
     { name = "fastapi", extras = ["all"], specifier = ">=0.124.4" },
     { name = "gevent", specifier = ">=26.5.0" },
     { name = "gunicorn", specifier = ">=26.0.0" },
-    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "httpx", extras = ["http2"], specifier = ">=0.28.1" },
     { name = "hypercorn", specifier = ">=0.18.0" },
     { name = "litestar", extras = ["pydantic", "standard"], specifier = ">=2.24.0" },
     { name = "orjson", specifier = ">=3.11.9" },
@@ -1954,6 +1954,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc", size = 141406, upload-time = "2024-12-06T15:37:23.222Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad", size = 73517, upload-time = "2024-12-06T15:37:21.509Z" },
+]
+
+[package.optional-dependencies]
+http2 = [
+    { name = "h2" },
 ]
 
 [[package]]
