@@ -11,6 +11,8 @@ python -m pip list --format=freeze | grep -vE '^(pip|setuptools|wheel)==' | cut 
 
 python -m pip install --upgrade -r requirements.txt
 
+deactivate
+
 mkdir -p tmp
 
 touch tmp/restart.txt

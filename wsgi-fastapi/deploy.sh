@@ -31,6 +31,8 @@ python -m ensurepip --upgrade
 
 python -m pip install --upgrade -r requirements.txt
 
+deactivate
+
 mkdir -p tmp
 
 touch tmp/restart.txt

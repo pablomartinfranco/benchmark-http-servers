@@ -1,5 +1,6 @@
-fastapi
 a2wsgi
+uvicorn
+fastapi
 httpx
 requests
 psutil

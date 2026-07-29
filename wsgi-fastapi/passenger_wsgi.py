@@ -1,3 +1,4 @@
+import uvicorn
 from a2wsgi import ASGIMiddleware
 from fastapi import FastAPI
 
@@ -6,7 +7,12 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"status": "ok"}
+    return {"message": "Hello World"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=60323)
+    # uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
 application = ASGIMiddleware(app)  # type: ignore
