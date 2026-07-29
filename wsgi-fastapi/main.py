@@ -32,6 +32,8 @@ Container = Annotated[AppContainer, Depends(get_container)]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print("Starting lifespan")
+
     async with AsyncExitStack() as stack:
         # async resources
         timeout = httpx.Timeout(connect=5.0, read=10.0, write=10.0, pool=5.0)
