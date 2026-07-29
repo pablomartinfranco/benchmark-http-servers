@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Exit immediately if a command exits with a non-zero status.
-set -euxo pipefail
+
+# set -euxo pipefail
 # Exit immediately if a command exits with a non-zero status,
 # print commands and their arguments as they are executed, 
 # treat unset variables as an error when substituting,
