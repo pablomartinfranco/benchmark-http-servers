@@ -1,16 +1,16 @@
-def application(environ, start_response):  # type: ignore
-    start_response("200 OK", [("Content-Type", "text/plain")])
-    return [b"Hello"]
+# def application(environ, start_response):  # type: ignore
+#     start_response("200 OK", [("Content-Type", "text/plain")])
+#     return [b"Hello"]
 
 
-# from fastapi import FastAPI
+from fastapi import FastAPI
 
-# app = FastAPI()
+app = FastAPI()
 
 
-# @app.get("/")
-# async def root():
-#     return {"ok": True}
+@app.get("/")
+async def root():
+    return {"ok": True}
 
 
 # from __future__ import annotations
