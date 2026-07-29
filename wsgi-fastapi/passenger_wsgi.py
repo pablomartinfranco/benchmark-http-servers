@@ -1,18 +1,22 @@
-#####
-## If only WSGI is supported, use the WSGI application
-import os
-import sys
+import traceback
 
-# Add your application directory to the system path
-sys.path.insert(0, os.path.dirname(__file__))
+try:
+    from a2wsgi import ASGIMiddleware
+    from fastapi import FastAPI
 
-# Import your FastAPI instance (assuming your main script is main.py and app instance is named app)
-# Import the ASGI-to-WSGI middleware
-from a2wsgi import ASGIMiddleware
-from main import app  # Import the FastAPI app instance
+    app = FastAPI()
 
-# Wrap the FastAPI app to make it WSGI-compliant
-application = ASGIMiddleware(app)  # type: ignore
+    @app.get("/")
+    async def root():
+        return {"ok": True}
+
+    application = ASGIMiddleware(app)  # type: ignore
+
+    print("loaded")
+
+except Exception:
+    traceback.print_exc()
+    raise
 
 
 # def application(environ, start_response):  # type: ignore
