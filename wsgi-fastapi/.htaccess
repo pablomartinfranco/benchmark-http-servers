@@ -1,3 +1,12 @@
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+# Reverse Proxy
+RewriteRule ^(.*)$ http://wsgi-fastapi.0a.com.ar:8001/$1 [P,L]
+
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
 PassengerAppRoot "/home/alphalab/web/0a/wsgi-fastapi.0a.com.ar"
 PassengerBaseURI "/"
