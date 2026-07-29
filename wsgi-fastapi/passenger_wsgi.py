@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-app = FastAPI()  # type: ignore
+application = FastAPI()  # type: ignore
 
 
 # from fastapi import FastAPI
