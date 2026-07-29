@@ -1,16 +1,6 @@
-from a2wsgi import ASGIMiddleware
-from starlette.applications import Starlette
-from starlette.responses import PlainTextResponse
-from starlette.routing import Route
+from fastapi import FastAPI
 
-
-async def homepage(request):  # type: ignore
-    return PlainTextResponse("hello")
-
-
-app = Starlette(routes=[Route("/", homepage)])  # type: ignore
-
-application = ASGIMiddleware(app)  # type: ignore
+app = FastAPI()  # type: ignore
 
 
 # from fastapi import FastAPI
