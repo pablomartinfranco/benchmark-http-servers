@@ -1,4 +1,5 @@
-import uvicorn
+import asyncio
+
 from a2wsgi import ASGIMiddleware
 from fastapi import FastAPI
 
@@ -10,12 +11,21 @@ async def root():
     return {"message": "Hello World"}
 
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=60323)
-    # uvicorn.run(app, host="0.0.0.0", port=8000)
+loop = asyncio.new_event_loop()
+
+application = ASGIMiddleware(app, loop=loop)  # type: ignore[arg-type]
+
+# @app.get("/")
+# async def root():
+#     return {"message": "Hello World"}
 
 
-application = ASGIMiddleware(app)  # type: ignore
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=60323)
+#     # uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+# application = ASGIMiddleware(app)  # type: ignore
 
 
 # from fastapi import FastAPI
