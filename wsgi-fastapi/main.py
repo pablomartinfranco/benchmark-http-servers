@@ -5,11 +5,11 @@ import threading
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
-from typing import Any
+from typing import Annotated, Any
 
 import httpx
 import requests
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 
 from shared.async_utils import async_blocking_io, async_fibonacci, async_gen_items, async_hash
 from shared.utils import benchmark, benchmark_scope, blocking_io, fibonacci, gen_items, hash
@@ -25,6 +25,9 @@ class AppContainer:
 
 def get_container(request: Request) -> AppContainer:
     return request.app.state.container
+
+
+Container = Annotated[AppContainer, Depends(get_container)]
 
 
 @asynccontextmanager
@@ -179,7 +182,7 @@ async def json_5() -> dict[str, Any]:
 
 @app.get("/json-6")
 @benchmark(name="json_6_outer")
-async def json_6(container: AppContainer) -> dict[str, Any]:
+async def json_6(container: Container) -> dict[str, Any]:
 
     loop = asyncio.get_running_loop()
 
@@ -201,7 +204,7 @@ async def json_6(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/json-7")
 @benchmark(name="json_7_outer")
-async def json_7(container: AppContainer) -> dict[str, Any]:
+async def json_7(container: Container) -> dict[str, Any]:
 
     loop = asyncio.get_running_loop()
 
@@ -329,7 +332,7 @@ async def cpu_5() -> dict[str, Any]:
 
 @app.get("/cpu-6")
 @benchmark(name="cpu_6_outer")
-async def cpu_6(container: AppContainer) -> dict[str, Any]:
+async def cpu_6(container: Container) -> dict[str, Any]:
 
     loop = asyncio.get_running_loop()
 
@@ -351,7 +354,7 @@ async def cpu_6(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/cpu-7")
 @benchmark(name="cpu_7_outer")
-async def cpu_7(container: AppContainer) -> dict[str, Any]:
+async def cpu_7(container: Container) -> dict[str, Any]:
 
     loop = asyncio.get_running_loop()
 
@@ -479,7 +482,7 @@ async def io_5() -> dict[str, Any]:
 
 @app.get("/io-6")
 @benchmark(name="io_6_outer")
-async def io_6(container: AppContainer) -> dict[str, Any]:
+async def io_6(container: Container) -> dict[str, Any]:
 
     loop = asyncio.get_running_loop()
 
@@ -501,7 +504,7 @@ async def io_6(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/io-7")
 @benchmark(name="io_7_outer")
-async def io_7(container: AppContainer) -> dict[str, Any]:
+async def io_7(container: Container) -> dict[str, Any]:
 
     loop = asyncio.get_running_loop()
 
@@ -552,7 +555,7 @@ async def http_1() -> dict[str, Any]:
 
 @app.get("/http-2")
 @benchmark(name="http_2_outer")
-async def http_2(container: AppContainer) -> dict[str, Any]:
+async def http_2(container: Container) -> dict[str, Any]:
 
     with benchmark_scope("http_2_inner") as result:
         responses = [
@@ -591,7 +594,7 @@ async def http_2b() -> dict[str, Any]:
 
 @app.get("/http-3")
 @benchmark(name="http_3_outer")
-async def http_3(container: AppContainer) -> dict[str, Any]:
+async def http_3(container: Container) -> dict[str, Any]:
 
     with benchmark_scope("http_3_inner") as result:
         responses = await asyncio.gather(
@@ -611,7 +614,7 @@ async def http_3(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/http-4")
 @benchmark(name="http_4_outer")
-async def http_4(container: AppContainer) -> dict[str, Any]:
+async def http_4(container: Container) -> dict[str, Any]:
 
     with benchmark_scope("http_4_inner") as result:
         async with asyncio.TaskGroup() as tg:
@@ -631,7 +634,7 @@ async def http_4(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/http-5")
 @benchmark(name="http_5_outer")
-async def http_5(container: AppContainer) -> dict[str, Any]:
+async def http_5(container: Container) -> dict[str, Any]:
 
     with benchmark_scope("http_5_inner") as result:
         responses = await asyncio.gather(
@@ -651,7 +654,7 @@ async def http_5(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/http-5b")
 @benchmark(name="http_5b_outer")
-async def http_5b(container: AppContainer) -> dict[str, Any]:
+async def http_5b(container: Container) -> dict[str, Any]:
 
     with benchmark_scope("http_5b_inner") as result:
         responses = await asyncio.gather(
@@ -671,7 +674,7 @@ async def http_5b(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/http-6")
 @benchmark(name="http_6_outer")
-async def http_6(container: AppContainer) -> dict[str, Any]:
+async def http_6(container: Container) -> dict[str, Any]:
 
     client = container.httpx_client
     thread_pool = container.thread_pool
@@ -695,7 +698,7 @@ async def http_6(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/http-6b")
 @benchmark(name="http_6b_outer")
-async def http_6b(container: AppContainer) -> dict[str, Any]:
+async def http_6b(container: Container) -> dict[str, Any]:
 
     client = container.requests_client
     thread_pool = container.thread_pool
@@ -719,7 +722,7 @@ async def http_6b(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/http-7")
 @benchmark(name="http_7_outer")
-async def http_7(container: AppContainer) -> dict[str, Any]:
+async def http_7(container: Container) -> dict[str, Any]:
 
     client = container.httpx_client
     process_pool = container.process_pool
@@ -743,7 +746,7 @@ async def http_7(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/http-7b")
 @benchmark(name="http_7b_outer")
-async def http_7b(container: AppContainer) -> dict[str, Any]:
+async def http_7b(container: Container) -> dict[str, Any]:
 
     client = container.requests_client
     process_pool = container.process_pool
@@ -772,7 +775,7 @@ async def http_7b(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/http-call-1")
 @benchmark(name="http_call_1_outer")
-async def http_call_1(container: AppContainer) -> dict[str, Any]:
+async def http_call_1(container: Container) -> dict[str, Any]:
 
     with benchmark_scope("http_call_1_inner") as result:
         response = container.requests_client.get("https://httpbin.org/get")
@@ -789,7 +792,7 @@ async def http_call_1(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/http-call-2")
 @benchmark(name="http_call_2_outer")
-async def http_call_2(container: AppContainer) -> dict[str, Any]:
+async def http_call_2(container: Container) -> dict[str, Any]:
 
     with benchmark_scope("http_call_2_inner") as result:
         response = await container.httpx_client.get("https://httpbin.org/get")
@@ -941,7 +944,7 @@ async def hash_5() -> dict[str, Any]:
 
 @app.get("/hash-6")
 @benchmark(name="hash_6_outer")
-async def hash_6(container: AppContainer) -> dict[str, Any]:
+async def hash_6(container: Container) -> dict[str, Any]:
 
     loop = asyncio.get_running_loop()
 
@@ -965,7 +968,7 @@ async def hash_6(container: AppContainer) -> dict[str, Any]:
 
 @app.get("/hash-7")
 @benchmark(name="hash_7_outer")
-async def hash_7(container: AppContainer) -> dict[str, Any]:
+async def hash_7(container: Container) -> dict[str, Any]:
 
     loop = asyncio.get_running_loop()
 
