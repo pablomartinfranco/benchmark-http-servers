@@ -10,7 +10,7 @@ import tracemalloc
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from functools import wraps
+from functools import cache, wraps
 from logging.handlers import QueueHandler, QueueListener
 from typing import Any
 
@@ -18,14 +18,14 @@ import psutil
 
 log_queue: queue.SimpleQueue[logging.LogRecord] = queue.SimpleQueue()
 
-file_handler = logging.FileHandler("benchmark.log")
+file_handler = logging.FileHandler("bmark.log")
 
 listener = QueueListener(log_queue, file_handler)
 listener.start()
 
 atexit.register(listener.stop)
 
-logger = logging.getLogger("benchmark")
+logger = logging.getLogger("bmark")
 logger.setLevel(logging.INFO)
 logger.addHandler(QueueHandler(log_queue))
 
@@ -102,7 +102,7 @@ def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
         # )
 
         logger.info(
-            "%s wall=%.6fs cpu=%.6fs mem=%+.2fKiB pkm=%+.2fKiB ctx=%d/%d",
+            "%s wall=%.6fs cpu=%.6fs mem=%+.2fKiB max=%+.2fKiB ctx=%d/%d",
             name,
             result.elapsed,
             result.cpu_time,
@@ -145,35 +145,46 @@ def flush_log_queue() -> None:
     file_handler.flush()
 
 
-def blocking_io(id: int | None = None) -> None:
+def blocking_io(id: int | None = None) -> int:
+    id = id if id is not None else int(time.time()) % 100000
     time.sleep(1)
-    _ = id and print(f"\nid = {id}")
+    # _ = id and print(f"\nid = {id}")
+    _ = id and logger.info(f"Blocking I/O completed for id={id}")
+    return id
 
 
-def fibonacci(n: int, id: int | None = None) -> int:
+def fibonacci(n: int, id: int | None = None) -> tuple[int, int]:
+    id = id if id is not None else int(time.time()) % 100000
+
+    @cache
     def fibo(n: int) -> int:
-        return n if n <= 1 else fibonacci(n - 1, id=None) + fibonacci(n - 2, id=None)
+        return n if n <= 1 else fibo(n - 1) + fibo(n - 2)
 
     fib = fibo(n)
-    _ = id and print(f"\nid = {id}")
-    return fib
+    # _ = id and print(f"\nid = {id}")
+    _ = id and logger.info(f"Fibonacci({n}) = {fib} for id={id}")
+    return fib, id
 
 
 def gen_items(n: int = 1000, id: int | None = None) -> list[dict[str, Any]]:
+    id = id if id is not None else int(time.time()) % 100000
     items: list[dict[str, Any]] = [
         {
-            "id": f"{id}-{i}" if id is not None else f"{i}",
+            "id": f"{id}-{i}",
             "name": f"user-{i}",
             "active": True,
         }
         for i in range(n)
     ]
-    _ = id and print(f"\nid = {id}")
+    # _ = id and print(f"\nid = {id}")
+    _ = id and logger.info(f"Generated {n} items for id={id}")
     return items
 
 
-def hash(data: bytes, id: int | None = None) -> str:
+def hash(data: bytes, id: int | None = None) -> tuple[str, int]:
+    id = id if id is not None else int(time.time()) % 100000
 
     result = hashlib.sha256(data).hexdigest()
-    _ = id and print(f"\nid = {id}")
-    return result
+    # _ = id and print(f"\nid = {id}")
+    _ = id and logger.info(f"Hashed data of length {len(data)} for id={id}")
+    return result, id

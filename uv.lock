@@ -423,6 +423,86 @@ wheels = [
 ]
 
 [[package]]
+name = "benchmark-http-servers"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "a2wsgi" },
+    { name = "aiohttp" },
+    { name = "attrs" },
+    { name = "blacksheep" },
+    { name = "daphne" },
+    { name = "falcon" },
+    { name = "fastapi", extra = ["all"] },
+    { name = "gevent" },
+    { name = "gunicorn" },
+    { name = "httpx" },
+    { name = "hypercorn" },
+    { name = "litestar", extra = ["pydantic", "standard"] },
+    { name = "orjson" },
+    { name = "psutil" },
+    { name = "pydantic" },
+    { name = "quart" },
+    { name = "requests" },
+    { name = "sanic", extra = ["all"] },
+    { name = "uvicorn", extra = ["standard"] },
+    { name = "uvloop", marker = "sys_platform != 'win32'" },
+]
+
+[package.dev-dependencies]
+benchmark = [
+    { name = "locust" },
+    { name = "molotov" },
+]
+dev = [
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "rich" },
+    { name = "ruff" },
+    { name = "typer" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "a2wsgi", specifier = ">=1.10.10" },
+    { name = "aiohttp", specifier = ">=3.14.1" },
+    { name = "attrs", specifier = ">=26.1.0" },
+    { name = "blacksheep", specifier = ">=2.6.3" },
+    { name = "daphne", specifier = ">=4.2.2" },
+    { name = "falcon", specifier = ">=4.3.1" },
+    { name = "fastapi", extras = ["all"], specifier = ">=0.124.4" },
+    { name = "gevent", specifier = ">=26.5.0" },
+    { name = "gunicorn", specifier = ">=26.0.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "hypercorn", specifier = ">=0.18.0" },
+    { name = "litestar", extras = ["pydantic", "standard"], specifier = ">=2.24.0" },
+    { name = "orjson", specifier = ">=3.11.9" },
+    { name = "psutil", specifier = ">=7.2.2" },
+    { name = "pydantic", specifier = ">=2.10.6" },
+    { name = "quart", specifier = ">=0.20.0" },
+    { name = "requests", specifier = ">=2.34.2" },
+    { name = "sanic", extras = ["all"], specifier = ">=25.12.1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.33.0" },
+    { name = "uvloop", marker = "sys_platform != 'win32'", specifier = ">=0.21.0" },
+]
+provides-extras = ["opt"]
+
+[package.metadata.requires-dev]
+benchmark = [
+    { name = "locust", specifier = ">=2.46.2" },
+    { name = "molotov", specifier = ">=2.6" },
+]
+dev = [
+    { name = "mypy", specifier = ">=1.14.1" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "pytest-asyncio", specifier = ">=0.24.0" },
+    { name = "rich", specifier = ">=14.3.4" },
+    { name = "ruff", specifier = ">=0.15.11" },
+    { name = "typer", specifier = ">=0.20.1" },
+]
+
+[[package]]
 name = "bidict"
 version = "0.23.1"
 source = { registry = "https://pypi.org/simple" }
@@ -4070,86 +4150,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d7/dd/04d56c2a5232358df41f3d0f0e31833d378b6c8ed7803a6b1b7867b0eba6/stevedore-5.9.0.tar.gz", hash = "sha256:abbd0af7a38a8bbb1d6adea2e35b17609cf004eaac323e88a8d8963640dd2b3c", size = 514850, upload-time = "2026-07-02T11:38:08.509Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/8d/008761f6e1000600e5303db30d05724bdcf3d2d186cbb59fac79b52e39ed/stevedore-5.9.0-py3-none-any.whl", hash = "sha256:e520945d4c257700eddc1eb1d79df04b2ea578eef185e0e3fa5b442fc848d3f7", size = 54463, upload-time = "2026-07-02T11:38:07.43Z" },
-]
-
-[[package]]
-name = "stonks-api-python"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "a2wsgi" },
-    { name = "aiohttp" },
-    { name = "attrs" },
-    { name = "blacksheep" },
-    { name = "daphne" },
-    { name = "falcon" },
-    { name = "fastapi", extra = ["all"] },
-    { name = "gevent" },
-    { name = "gunicorn" },
-    { name = "httpx" },
-    { name = "hypercorn" },
-    { name = "litestar", extra = ["pydantic", "standard"] },
-    { name = "orjson" },
-    { name = "psutil" },
-    { name = "pydantic" },
-    { name = "quart" },
-    { name = "requests" },
-    { name = "sanic", extra = ["all"] },
-    { name = "uvicorn", extra = ["standard"] },
-    { name = "uvloop", marker = "sys_platform != 'win32'" },
-]
-
-[package.dev-dependencies]
-benchmark = [
-    { name = "locust" },
-    { name = "molotov" },
-]
-dev = [
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "rich" },
-    { name = "ruff" },
-    { name = "typer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "a2wsgi", specifier = ">=1.10.10" },
-    { name = "aiohttp", specifier = ">=3.14.1" },
-    { name = "attrs", specifier = ">=26.1.0" },
-    { name = "blacksheep", specifier = ">=2.6.3" },
-    { name = "daphne", specifier = ">=4.2.2" },
-    { name = "falcon", specifier = ">=4.3.1" },
-    { name = "fastapi", extras = ["all"], specifier = ">=0.124.4" },
-    { name = "gevent", specifier = ">=26.5.0" },
-    { name = "gunicorn", specifier = ">=26.0.0" },
-    { name = "httpx", specifier = ">=0.28.1" },
-    { name = "hypercorn", specifier = ">=0.18.0" },
-    { name = "litestar", extras = ["pydantic", "standard"], specifier = ">=2.24.0" },
-    { name = "orjson", specifier = ">=3.11.9" },
-    { name = "psutil", specifier = ">=7.2.2" },
-    { name = "pydantic", specifier = ">=2.10.6" },
-    { name = "quart", specifier = ">=0.20.0" },
-    { name = "requests", specifier = ">=2.34.2" },
-    { name = "sanic", extras = ["all"], specifier = ">=25.12.1" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.33.0" },
-    { name = "uvloop", marker = "sys_platform != 'win32'", specifier = ">=0.21.0" },
-]
-provides-extras = ["opt"]
-
-[package.metadata.requires-dev]
-benchmark = [
-    { name = "locust", specifier = ">=2.46.2" },
-    { name = "molotov", specifier = ">=2.6" },
-]
-dev = [
-    { name = "mypy", specifier = ">=1.14.1" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "pytest-asyncio", specifier = ">=0.24.0" },
-    { name = "rich", specifier = ">=14.3.4" },
-    { name = "ruff", specifier = ">=0.15.11" },
-    { name = "typer", specifier = ">=0.20.1" },
 ]
 
 [[package]]

@@ -19,6 +19,9 @@
 │   ├── main.py
 │   └── passenger_wsgi.py
 ├── wsgi-falcon-gevent
+│   ├── benchmark
+│   │   ├── locustfile.py
+│   │   └── molotovfile.py
 │   ├── deploy.sh
 │   ├── logs.sh
 │   ├── main.py
@@ -38,6 +41,7 @@
 │   └── passenger_wsgi.py
 ├── deploy.sh
 ├── Justfile
+├── oha.exe
 └── pyproject.toml
 ```
 
@@ -93,6 +97,13 @@ touch tmp/restart.txt
 ```
 
 
+# FILE: oha.exe
+
+```python
+# ERROR READING FILE: 'utf-8' codec can't decode byte 0x90 in position 2: invalid start byte
+```
+
+
 # FILE: pyproject.toml
 
 ```python
@@ -126,6 +137,10 @@ dependencies = [
 ]
 
 [dependency-groups]
+benchmark = [
+    "locust>=2.46.2",
+    "molotov>=2.6",
+]
 dev = [
     "mypy>=1.14.1",
     "pytest>=8.3.5",
@@ -181,17 +196,34 @@ ignore_missing_imports = true
 ```python
 from __future__ import annotations
 
+import atexit
 import hashlib
+import logging
 import os
+import queue
 import time
 import tracemalloc
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from functools import wraps
+from logging.handlers import QueueHandler, QueueListener
 from typing import Any
 
 import psutil
+
+log_queue: queue.SimpleQueue[logging.LogRecord] = queue.SimpleQueue()
+
+file_handler = logging.FileHandler("bmark.log")
+
+listener = QueueListener(log_queue, file_handler)
+listener.start()
+
+atexit.register(listener.stop)
+
+logger = logging.getLogger("bmark")
+logger.setLevel(logging.INFO)
+logger.addHandler(QueueHandler(log_queue))
 
 # Initialize once when the application starts.
 # Do not start/stop tracemalloc on every request.
@@ -203,6 +235,7 @@ class BenchmarkResult:
     elapsed: float = 0.0
     cpu_time: float = 0.0
     memory: int = 0
+    peak_memory: int = 0
     voluntary_switches: int = 0
     involuntary_switches: int = 0
 
@@ -220,6 +253,8 @@ def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
     start_cpu = time.process_time_ns()
 
     start_memory, _ = tracemalloc.get_traced_memory()
+    tracemalloc.reset_peak()
+
     start_context = process.num_ctx_switches()
 
     result = BenchmarkResult()
@@ -230,25 +265,47 @@ def benchmark_scope(name: str) -> Generator[BenchmarkResult, None, None]:
     finally:
         end_wall = time.perf_counter_ns()
         end_cpu = time.process_time_ns()
-        end_memory, _ = tracemalloc.get_traced_memory()
+        end_memory, peak_memory = tracemalloc.get_traced_memory()
         end_context = process.num_ctx_switches()
 
         result.elapsed = (end_wall - start_wall) / 1_000_000_000
         result.cpu_time = (end_cpu - start_cpu) / 1_000_000_000
         result.memory = end_memory - start_memory
+        result.peak_memory = peak_memory - start_memory
 
         # print(f"\nbefore end: os={os.getpid()} psutil={process.pid}", flush=True)
         result.voluntary_switches = end_context.voluntary - start_context.voluntary
         result.involuntary_switches = end_context.involuntary - start_context.involuntary
 
-        print(
-            f"\n{name}:\n"
-            f"  wall={result.elapsed:.6f}s\n"
-            f"  cpu ={result.cpu_time:.6f}s\n"
-            f"  mem ={result.memory / 1024:.2f}KB\n"
-            f"  ctx ={result.voluntary_switches} voluntary "
-            f"{result.involuntary_switches} involuntary",
-            flush=True,
+        # print(
+        #     f"\n{name}:\n"
+        #     f"  wall={result.elapsed:.6f}s\n"
+        #     f"  cpu ={result.cpu_time:.6f}s\n"
+        #     f"  mem ={result.memory / 1024:.2f}KB\n"
+        #     f"  ctx ={result.voluntary_switches} voluntary "
+        #     f"{result.involuntary_switches} involuntary",
+        #     flush=True,
+        # )
+
+        # logger.info(
+        #     "%s wall=%.6f cpu=%.6f mem=%d ctx=%d/%d",
+        #     name,
+        #     result.elapsed,
+        #     result.cpu_time,
+        #     result.memory,
+        #     result.voluntary_switches,
+        #     result.involuntary_switches,
+        # )
+
+        logger.info(
+            "%s wall=%.6fs cpu=%.6fs mem=%+.2fKiB max=%+.2fKiB ctx=%d/%d",
+            name,
+            result.elapsed,
+            result.cpu_time,
+            result.memory / 1024,
+            result.peak_memory / 1024,
+            result.voluntary_switches,
+            result.involuntary_switches,
         )
 
 
@@ -272,9 +329,22 @@ def benchmark(
     return decorator
 
 
+def flush_log_queue() -> None:
+    while True:
+        try:
+            record = log_queue.get_nowait()
+        except queue.Empty:
+            break
+        else:
+            file_handler.handle(record)
+
+    file_handler.flush()
+
+
 def blocking_io(id: int | None = None) -> None:
     time.sleep(1)
-    _ = id and print(f"\nid = {id}")
+    # _ = id and print(f"\nid = {id}")
+    _ = id and logger.info(f"Blocking I/O completed for id={id}")
 
 
 def fibonacci(n: int, id: int | None = None) -> int:
@@ -282,7 +352,8 @@ def fibonacci(n: int, id: int | None = None) -> int:
         return n if n <= 1 else fibonacci(n - 1, id=None) + fibonacci(n - 2, id=None)
 
     fib = fibo(n)
-    _ = id and print(f"\nid = {id}")
+    # _ = id and print(f"\nid = {id}")
+    _ = id and logger.info(f"Fibonacci({n}) = {fib} for id={id}")
     return fib
 
 
@@ -295,14 +366,16 @@ def gen_items(n: int = 1000, id: int | None = None) -> list[dict[str, Any]]:
         }
         for i in range(n)
     ]
-    _ = id and print(f"\nid = {id}")
+    # _ = id and print(f"\nid = {id}")
+    _ = id and logger.info(f"Generated {n} items for id={id}")
     return items
 
 
 def hash(data: bytes, id: int | None = None) -> str:
 
     result = hashlib.sha256(data).hexdigest()
-    _ = id and print(f"\nid = {id}")
+    # _ = id and print(f"\nid = {id}")
+    _ = id and logger.info(f"Hashed data of length {len(data)} for id={id}")
     return result
 
 ```
@@ -534,6 +607,97 @@ application: WSGIApplication = app
 ```
 
 
+# FILE: wsgi-falcon-gevent\benchmark\locustfile.py
+
+```python
+from locust import HttpUser, task
+
+
+class BenchmarkUser(HttpUser):
+    host = "https://wsgi-falcon-gevent.0a.com.ar"
+
+    @task
+    def plain(self):
+        self.client.get("/plain")
+
+    # @task
+    # def json_1(self):
+    #     self.client.get("/json-1")
+
+    # @task
+    # def json_2(self):
+    #     self.client.get("/json-2")
+
+    # @task
+    # def cpu_1(self):
+    #     self.client.get("/cpu-1")
+
+    # @task
+    # def cpu_2(self):
+    #     self.client.get("/cpu-2")
+
+    # @task
+    # def io_1(self):
+    #     self.client.get("/io-1")
+
+    # @task
+    # def io_2(self):
+    #     self.client.get("/io-2")
+
+    # @task
+    # def http_1(self):
+    #     self.client.get("/http-1")
+
+    # @task
+    # def http_2(self):
+    #     self.client.get("/http-2")
+
+    # @task
+    # def hash_1(self):
+    #     self.client.get("/hash-1")
+
+    # @task
+    # def hash_2(self):
+    #     self.client.get("/hash-2")
+
+```
+
+
+# FILE: wsgi-falcon-gevent\benchmark\molotovfile.py
+
+```python
+import os
+
+from molotov import scenario  # type: ignore
+
+BASE_URL = os.getenv("BASE_URL", "https://wsgi-falcon-gevent.0a.com.ar")
+
+ENDPOINTS = [
+    "/plain",
+    # "/json-1",
+    # "/json-2",
+    # "/cpu-1",
+    # "/cpu-2",
+    # "/io-1",
+    # "/io-2",
+    # "/http-1",
+    # "/http-2",
+    # "/http-call",
+    # "/hash-1",
+    # "/hash-2",
+]
+
+
+@scenario()
+async def benchmark(session):  # type: ignore
+    for endpoint in ENDPOINTS:
+        async with session.get(f"{BASE_URL}{endpoint}") as resp:  # type: ignore
+            assert resp.status == 200  # type: ignore
+            await resp.read()  # type: ignore
+
+```
+
+
 # FILE: wsgi-falcon-gevent\deploy.sh
 
 ```python
@@ -595,11 +759,11 @@ from shared.utils import benchmark, benchmark_scope, blocking_io, fibonacci, gen
 class Plain:
     @benchmark(name="plain_outer")
     def on_get(self, req: Request, resp: Response) -> None:
-        with benchmark_scope("cpu_1_inner") as result:
-            ...
+        # with benchmark_scope("cpu_1_inner") as result:
+        # ...
         resp.media = {
             "data": "ok",
-            **result.to_dict(),
+            # **result.to_dict(),
         }
 
 
